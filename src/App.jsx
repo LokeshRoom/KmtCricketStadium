@@ -1,35 +1,250 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, CircleHelp, Copy, Download, ExternalLink, LogOut, Menu, Plus, Search, ShieldCheck, SlidersHorizontal, TicketCheck, X } from 'lucide-react';
+import {
+  ArrowDownRight,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  CircleHelp,
+  Clock,
+  Copy,
+  Download,
+  ExternalLink,
+  Filter,
+  Layers,
+  LogOut,
+  MapPin,
+  Menu,
+  Phone,
+  Plus,
+  QrCode,
+  Search,
+  Share2,
+  ShieldAlert,
+  ShieldCheck,
+  SlidersHorizontal,
+  Smartphone,
+  Sparkles,
+  Ticket,
+  TicketCheck,
+  Trophy,
+  User,
+  Users,
+  X,
+} from 'lucide-react';
 import QRCode from 'qrcode';
 import Markdown from 'react-markdown';
 import { useAuth } from './AuthContext';
 import { addTournament, createRegistration, listRegistrations, listTournaments, onDataChange, reviewRegistration, saveTournament } from './store';
 import { FORMATS, campaignUrl, safeReturnPath, toCsv, validateRegistration } from './domain';
 
-const money = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(amount || 0));
-const dateLabel = (value, options = { day: 'numeric', month: 'short', year: 'numeric' }) => value ? new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', ...options }).format(new Date(value)) : 'Date to be announced';
-const dateTimeValue = (value) => { if (!value) return ''; const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
-const dateIso = (value) => value ? new Date(value).toISOString() : '';
+const money = (amount) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(amount || 0));
+
+const dateLabel = (value, options = { day: 'numeric', month: 'short', year: 'numeric' }) =>
+  value ? new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', ...options }).format(new Date(value)) : 'TBA';
+
+const dateTimeValue = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
+const dateIso = (value) => (value ? new Date(value).toISOString() : '');
 const ballTypes = ['Leather Ball', 'Tennis Ball'];
 
+// Custom Hook for PWA Installation
+function usePwaInstall() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    setIsStandalone(Boolean(isStandaloneMode));
+
+    const handler = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const promptInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
+  return {
+    canInstall: Boolean(deferredPrompt) && !isStandalone && !dismissed,
+    isStandalone,
+    promptInstall,
+    dismiss: () => setDismissed(true),
+  };
+}
+
 function CricketPhoto({ crop, alt, className = '' }) {
-  return <div className={`photo-crop crop-${crop} ${className}`} role="img" aria-label={alt}><img src="/images/cricket-contact-sheet.png" alt="" /></div>;
+  return (
+    <div className={`photo-crop crop-${crop} ${className}`} role="img" aria-label={alt}>
+      <img src="/images/cricket-contact-sheet.png" alt="" loading="lazy" />
+    </div>
+  );
 }
 
 function BrandMark({ light = false }) {
-  return <Link className={`brand-mark ${light ? 'brand-mark--light' : ''}`} to="/" aria-label="KMT Cricket Stadium home">
-    <span className="wicket-mark" aria-hidden="true"><i /><i /><i /><b /></span>
-    <span>KMT <em>CRICKET STADIUM</em></span>
-  </Link>;
+  return (
+    <Link className={`brand-mark ${light ? 'brand-mark--light' : ''}`} to="/" aria-label="KMT Cricket Stadium home">
+      <span className="brand-icon">
+        <svg viewBox="0 0 32 32" fill="none" width="26" height="26" aria-hidden="true">
+          <rect x="7" y="10" width="3" height="17" rx="1.5" fill="currentColor" />
+          <rect x="14.5" y="7" width="3" height="20" rx="1.5" fill="var(--color-gold)" />
+          <rect x="22" y="10" width="3" height="17" rx="1.5" fill="currentColor" />
+          <rect x="5" y="7" width="22" height="2.5" rx="1.2" fill="var(--color-gold)" />
+          <circle cx="21" cy="21" r="3.5" fill="var(--color-accent-red)" />
+        </svg>
+      </span>
+      <span className="brand-text">
+        <span className="brand-title">KMT CRICKET</span>
+        <span className="brand-sub">STADIUM • BENGALURU</span>
+      </span>
+    </Link>
+  );
+}
+
+function PwaInstallBanner() {
+  const { canInstall, promptInstall, dismiss } = usePwaInstall();
+  if (!canInstall) return null;
+
+  return (
+    <div className="pwa-banner" role="region" aria-label="Install App">
+      <div className="pwa-banner-content">
+        <div className="pwa-icon">
+          <Smartphone size={20} />
+        </div>
+        <div className="pwa-text">
+          <strong>Install KMT Cricket App</strong>
+          <span>Instant match passes, fast registration & offline access</span>
+        </div>
+      </div>
+      <div className="pwa-actions">
+        <button type="button" className="pwa-btn-install" onClick={promptInstall}>
+          Install App
+        </button>
+        <button type="button" className="pwa-btn-dismiss" onClick={dismiss} aria-label="Dismiss banner">
+          <X size={18} />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function PublicHeader() {
-  return <header className="public-header wrap"><BrandMark /><nav aria-label="Main navigation"><Link to="/tournaments">Tournaments</Link><Link to="/status">My entry</Link><Link className="nav-action" to="/auth">Sign in <ArrowUpRight size={16} /></Link></nav></header>;
+  const { user } = useAuth();
+  return (
+    <header className="site-header">
+      <div className="header-inner">
+        <BrandMark />
+        <nav className="desktop-nav" aria-label="Main navigation">
+          <Link to="/tournaments" className="nav-link">
+            Tournaments
+          </Link>
+          <Link to="/status" className="nav-link">
+            My Match Pass
+          </Link>
+          {user ? (
+            <Link to={user.isAdmin ? '/admin' : '/user/dashboard'} className="nav-pill">
+              <User size={15} />
+              <span>{user.isAdmin ? 'Organizer' : 'Dashboard'}</span>
+            </Link>
+          ) : (
+            <Link to="/auth" className="nav-pill">
+              <span>Sign in</span>
+              <ArrowUpRight size={14} />
+            </Link>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function MobileBottomNav() {
+  const location = useLocation();
+  const { user } = useAuth();
+  const path = location.pathname;
+
+  // Hide bottom tab bar on fixture details page so action bar has full bottom clearance
+  if (path.startsWith('/t/')) return null;
+
+  const isTournaments = path === '/' || path.startsWith('/tournaments');
+  const isPasses = path === '/status' || path === '/user/dashboard';
+  const isAdmin = path.startsWith('/admin');
+  const isAuth = path === '/auth';
+
+  return (
+    <nav className="mobile-bottom-nav" aria-label="Bottom Navigation">
+      <Link to="/tournaments" className={`bottom-tab ${isTournaments ? 'is-active' : ''}`}>
+        <Trophy size={20} />
+        <span>Tournaments</span>
+      </Link>
+      <Link to="/status" className={`bottom-tab ${isPasses ? 'is-active' : ''}`}>
+        <Ticket size={20} />
+        <span>My Pass</span>
+      </Link>
+      {user?.isAdmin ? (
+        <Link to="/admin" className={`bottom-tab ${isAdmin ? 'is-active' : ''}`}>
+          <ShieldCheck size={20} />
+          <span>Organizer</span>
+        </Link>
+      ) : user ? (
+        <Link to="/user/dashboard" className={`bottom-tab ${isPasses ? 'is-active' : ''}`}>
+          <User size={20} />
+          <span>Profile</span>
+        </Link>
+      ) : (
+        <Link to="/auth" className={`bottom-tab ${isAuth ? 'is-active' : ''}`}>
+          <User size={20} />
+          <span>Sign In</span>
+        </Link>
+      )}
+    </nav>
+  );
 }
 
 function PublicFooter() {
-  return <footer className="public-footer"><div className="wrap footer-grid"><BrandMark light /><div><p>Competition starts at the crease.</p></div><nav aria-label="Footer"><Link to="/tournaments">Tournaments</Link><Link to="/status">Entry status</Link><Link to="/auth">Organizer sign in</Link></nav><small>© {new Date().getFullYear()} KMT Cricket Stadium</small></div></footer>;
+  return (
+    <footer className="site-footer">
+      <div className="footer-container">
+        <div className="footer-top">
+          <BrandMark light />
+          <p className="footer-tagline">
+            Bengaluru’s premier floodlit cricket destination. Modern turf, leather ball tournaments & digital matchday desk.
+          </p>
+        </div>
+        <div className="footer-nav">
+          <Link to="/tournaments">Tournaments</Link>
+          <Link to="/status">Check Entry Status</Link>
+          <Link to="/auth">Organizer Desk</Link>
+        </div>
+        <div className="footer-bottom">
+          <small>© {new Date().getFullYear()} KMT Cricket Stadium. Bengaluru, Karnataka.</small>
+          <div className="pwa-indicator">
+            <span className="dot-green" /> PWA Enabled • Offline Ready
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }
 
 function useData() {
@@ -39,87 +254,553 @@ function useData() {
   const [error, setError] = useState('');
   const { user } = useAuth();
   const admin = Boolean(user?.isAdmin);
+
   const refresh = async () => {
     setLoading(true);
     try {
-      const [events, entries] = await Promise.all([listTournaments(admin), user ? listRegistrations(user) : Promise.resolve([])]);
+      const [events, entries] = await Promise.all([
+        listTournaments(admin),
+        user ? listRegistrations(user) : Promise.resolve([]),
+      ]);
       setTournaments(events);
       setRegistrations(entries);
       setError('');
     } catch (cause) {
       console.error(cause);
-      setError('We could not load the tournament desk. Check your connection and try again.');
-    } finally { setLoading(false); }
+      setError('We could not load tournament fixtures. Check your connection.');
+    } finally {
+      setLoading(false);
+    }
   };
-  useEffect(() => { refresh(); }, [user?.uid, admin]);
+
+  useEffect(() => {
+    refresh();
+  }, [user?.uid, admin]);
+
   useEffect(() => onDataChange(refresh), [user?.uid, admin]);
   return { tournaments, registrations, loading, error, refresh };
 }
 
-function LoadingState() { return <div className="state-block"><span className="loader" />Loading matchday details…</div>; }
-function ErrorState({ message, retry }) { return <div className="state-block error-state" role="alert"><p>{message}</p>{retry && <button className="button button--outline" onClick={retry}>Try again</button>}</div>; }
-function EmptyState({ title, copy, action }) { return <div className="empty-state"><span className="empty-glyph"><TicketCheck size={22} /></span><h2>{title}</h2><p>{copy}</p>{action}</div>; }
-
-function EventMeta({ tournament }) {
-  return <div className="event-meta"><span>{tournament.format}</span><span>{tournament.ballType}</span><span>{dateLabel(tournament.startsAt, { day: 'numeric', month: 'short' })}{tournament.endsAt && new Date(tournament.endsAt).toDateString() !== new Date(tournament.startsAt).toDateString() ? `–${dateLabel(tournament.endsAt, { day: 'numeric', month: 'short' })}` : ''}</span></div>;
+function LoadingState({ label = 'Loading matchday fixtures…' }) {
+  return (
+    <div className="state-card loading-state">
+      <div className="spinner" />
+      <p>{label}</p>
+    </div>
+  );
 }
 
-function EventRow({ tournament, index = 0 }) {
-  const imageCrop = ['pitch', 'ball', 'practice', 'pavilion'][index % 4];
-  return <article className="event-row">
-    <CricketPhoto crop={imageCrop} alt={`${tournament.format} cricket tournament at a stadium`} className="event-photo" />
-    <div className="event-row-main"><h3><Link to={`/t/${tournament.id}`}>{tournament.title}</Link></h3><EventMeta tournament={tournament} /><p>{tournament.venue} <span>·</span> {tournament.description}</p></div>
-    <div className="event-row-action"><strong>{money(tournament.entryFee)}</strong><span>team entry</span><Link className="text-link" to={`/t/${tournament.id}`}>Tournament details <ArrowUpRight size={16} /></Link></div>
-  </article>;
+function ErrorState({ message, retry }) {
+  return (
+    <div className="state-card error-state" role="alert">
+      <ShieldAlert size={28} />
+      <p>{message}</p>
+      {retry && (
+        <button type="button" className="btn btn-outline" onClick={retry}>
+          Try Again
+        </button>
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ title, copy, action }) {
+  return (
+    <div className="state-card empty-state">
+      <div className="empty-icon-wrap">
+        <TicketCheck size={28} />
+      </div>
+      <h3>{title}</h3>
+      <p>{copy}</p>
+      {action}
+    </div>
+  );
+}
+
+function EventBadge({ format, ballType }) {
+  return (
+    <div className="event-badges">
+      <span className="badge badge-format">{format}</span>
+      <span className="badge badge-ball">{ballType}</span>
+    </div>
+  );
+}
+
+function TournamentCard({ tournament, index = 0 }) {
+  const crops = ['pitch', 'ball', 'practice', 'pavilion'];
+  const imageCrop = crops[index % crops.length];
+  const isClosingSoon = tournament.deadline && new Date(tournament.deadline).getTime() - Date.now() < 3 * 86400000;
+
+  return (
+    <article className="tournament-card">
+      <div className="card-media">
+        <CricketPhoto crop={imageCrop} alt={tournament.title} className="card-photo" />
+        <div className="card-overlay" />
+        <div className="card-top-tags">
+          <EventBadge format={tournament.format} ballType={tournament.ballType} />
+          {isClosingSoon && <span className="tag-urgent">Closing Soon</span>}
+        </div>
+        <div className="card-price-pill">
+          <strong>{money(tournament.entryFee)}</strong>
+          <span>/ team</span>
+        </div>
+      </div>
+
+      <div className="card-body">
+        <div className="card-dates">
+          <Calendar size={14} />
+          <span>
+            {dateLabel(tournament.startsAt, { day: 'numeric', month: 'short' })}
+            {tournament.endsAt && new Date(tournament.endsAt).toDateString() !== new Date(tournament.startsAt).toDateString()
+              ? ` – ${dateLabel(tournament.endsAt, { day: 'numeric', month: 'short' })}`
+              : ''}
+          </span>
+        </div>
+
+        <h3 className="card-title">
+          <Link to={`/t/${tournament.id}`}>{tournament.title}</Link>
+        </h3>
+
+        <div className="card-venue">
+          <MapPin size={14} />
+          <span>{tournament.venue || 'KMT Cricket Stadium, Bengaluru'}</span>
+        </div>
+
+        {tournament.description && <p className="card-desc">{tournament.description}</p>}
+
+        <div className="card-footer">
+          <div className="card-deadline">
+            <span>Registration deadline:</span>
+            <strong>{dateLabel(tournament.deadline, { day: 'numeric', month: 'short' })}</strong>
+          </div>
+          <Link to={`/t/${tournament.id}`} className="btn btn-primary btn-sm">
+            <span>View & Enter</span>
+            <ChevronRight size={16} />
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function HomePage() {
   const { tournaments, loading, error, refresh } = useData();
-  const [format, setFormat] = useState('All formats');
-  const [ball, setBall] = useState('All balls');
+  const [format, setFormat] = useState('All');
+  const [ball, setBall] = useState('All');
   const [search, setSearch] = useState('');
-  const filtered = useMemo(() => tournaments.filter((t) => (format === 'All formats' || t.format === format) && (ball === 'All balls' || t.ballType === ball) && `${t.title} ${t.venue}`.toLowerCase().includes(search.toLowerCase())), [tournaments, format, ball, search]);
-  return <><PublicHeader /><main>
-    <section className="matchday-hero"><CricketPhoto crop="pitch" alt="Floodlit cricket ground with a match underway" className="matchday-hero-photo" /><div className="matchday-hero-shade" /><div className="wrap matchday-hero-content"><p className="matchday-location">KMT Cricket Stadium <span>·</span> Bengaluru</p><CricketPhoto crop="ball" alt="Red leather cricket ball ready for play" className="matchday-ball-closeup" /><h1><span className="hero-line-accent">YOUR XI.</span><br /><span>UNDER LIGHTS.</span></h1><div className="matchday-hero-bottom"><p>Every match has a first ball.<br />Make yours count at KMT.</p><Link to="#tournaments" className="button button--light">Find your fixture <ArrowDownRight size={18} /></Link></div><div className="matchday-tally"><span>{loading ? '—' : String(tournaments.length)}<small>Tournaments</small></span><span>One<small>Home ground</small></span><span>Your XI<small>Your innings</small></span></div></div><div className="hero-delivery" aria-hidden="true"><i /></div></section>
-    <section id="tournaments" className="event-list-section wrap"><div className="section-heading"><div><h2>Upcoming tournaments at KMT.</h2></div><p>Choose your format. Entry fees are per team; the stadium desk confirms each place after payment review.</p></div>
-      <div className="filters"><label className="search-box"><Search size={17} /><input aria-label="Search tournaments" placeholder="Search tournaments" value={search} onChange={(event) => setSearch(event.target.value)} /></label><label><span className="sr-only">Format</span><select value={format} onChange={(event) => setFormat(event.target.value)}><option>All formats</option>{FORMATS.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown size={15} /></label><label><span className="sr-only">Ball type</span><select value={ball} onChange={(event) => setBall(event.target.value)}><option>All balls</option>{ballTypes.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown size={15} /></label><span className="filter-count">{filtered.length} {filtered.length === 1 ? 'tournament' : 'tournaments'}</span></div>
-      {loading ? <LoadingState /> : error ? <ErrorState message={error} retry={refresh} /> : filtered.length ? <div className="event-list">{filtered.map((tournament, index) => <EventRow key={tournament.id} tournament={tournament} index={index} />)}</div> : <EmptyState title="No tournaments match those filters" copy="Try another format or clear your search." action={<button className="button button--outline" onClick={() => { setSearch(''); setFormat('All formats'); setBall('All balls'); }}>Clear filters</button>} />}
-    </section>
-    <MatchdayStory tournamentCount={tournaments.length} />
-  </main><PublicFooter /></>;
-}
 
-function MatchdayStory({ tournamentCount }) {
-  return <section className="innings-story" aria-labelledby="innings-title"><div className="innings-stage"><CricketPhoto crop="practice" alt="Cricket players training in the evening light" className="innings-photo" /><div className="innings-shade" /><svg className="delivery-trail" viewBox="0 0 1200 700" preserveAspectRatio="none" aria-hidden="true"><path d="M-30 570 C 220 180, 480 130, 720 270 S 1000 420, 1170 240" /></svg><div className="flight-ball" aria-hidden="true"><i /></div><div className="story-stumps" aria-hidden="true"><i /><i /><i /><b /></div><div className="wrap innings-content"><div className="innings-lead"><p>Before the first ball</p><h2 id="innings-title">One ground.<br />Your innings.</h2></div><div className="innings-steps"><div><span>The fixture</span><strong>Choose the format for your XI.</strong></div><div><span>Your squad</span><strong>Put your players on the sheet.</strong></div><div><span>Matchday</span><strong>Get verified. Walk out ready.</strong></div><Link to="/status" className="story-status-link">Follow your entry <ArrowUpRight size={16} /></Link></div><div className="innings-count"><strong>{String(tournamentCount)}</strong><span>Fixtures on the board</span></div></div></div></section>;
+  const filtered = useMemo(() => {
+    return tournaments.filter((t) => {
+      const matchFormat = format === 'All' || t.format === format;
+      const matchBall = ball === 'All' || t.ballType === ball;
+      const matchSearch = `${t.title} ${t.venue} ${t.format}`.toLowerCase().includes(search.toLowerCase());
+      return matchFormat && matchBall && matchSearch;
+    });
+  }, [tournaments, format, ball, search]);
+
+  const activeTournamentsCount = tournaments.filter((t) => t.status === 'published').length;
+
+  return (
+    <div className="page-shell">
+      <PwaInstallBanner />
+      <PublicHeader />
+      <main className="main-content">
+        {/* Compact, Clean Mobile-First Sports Hero */}
+        <section className="hero-compact">
+          <div className="hero-container">
+            <div className="hero-pill-badge">
+              <span className="live-dot" />
+              <span>Bengaluru Matchday Portal</span>
+            </div>
+            <h1 className="hero-headline">
+              YOUR XI. <span className="text-gold">UNDER LIGHTS.</span>
+            </h1>
+            <p className="hero-subtext">
+              Official tournaments at KMT Cricket Stadium. Choose your fixture, register your team, and receive verified digital passes.
+            </p>
+
+            <div className="hero-stats-row">
+              <div className="hero-stat">
+                <strong>{loading ? '—' : activeTournamentsCount || tournaments.length}</strong>
+                <span>Open Tournaments</span>
+              </div>
+              <div className="hero-stat-sep" />
+              <div className="hero-stat">
+                <strong>11</strong>
+                <span>Players In XI</span>
+              </div>
+              <div className="hero-stat-sep" />
+              <div className="hero-stat">
+                <strong>4K</strong>
+                <span>Floodlit Arena</span>
+              </div>
+            </div>
+
+            <div className="hero-cta-group">
+              <a href="#fixtures" className="btn btn-gold">
+                <span>Browse Tournaments</span>
+                <ArrowDownRight size={18} />
+              </a>
+              <Link to="/status" className="btn btn-outline-light">
+                <Ticket size={16} />
+                <span>My Team Pass</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Fixtures & Filters Section */}
+        <section id="fixtures" className="fixtures-section">
+          <div className="fixtures-header">
+            <div>
+              <h2 className="section-title">Upcoming Tournaments</h2>
+              <p className="section-subtitle">Select a tournament format below to view team slots and register.</p>
+            </div>
+            <span className="results-count">
+              {filtered.length} {filtered.length === 1 ? 'Tournament' : 'Tournaments'}
+            </span>
+          </div>
+
+          {/* Clean Mobile Search & Filter Chips */}
+          <div className="filter-panel">
+            <div className="search-bar">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder="Search tournaments, formats, venues…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label="Search tournaments"
+              />
+              {search && (
+                <button type="button" className="btn-clear" onClick={() => setSearch('')} aria-label="Clear search">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Horizontal Scrollable Format Chips */}
+            <div className="chips-scroller" role="tablist" aria-label="Format filter">
+              {['All', ...FORMATS].map((fmt) => (
+                <button
+                  key={fmt}
+                  type="button"
+                  role="tab"
+                  aria-selected={format === fmt}
+                  className={`chip ${format === fmt ? 'chip-active' : ''}`}
+                  onClick={() => setFormat(fmt)}
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+
+            {/* Ball Type Chips */}
+            <div className="chips-scroller-ball">
+              {['All', ...ballTypes].map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  className={`chip-sub ${ball === b ? 'chip-sub-active' : ''}`}
+                  onClick={() => setBall(b)}
+                >
+                  {b === 'All' ? 'All Balls' : b}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Cards Grid */}
+          {loading ? (
+            <LoadingState />
+          ) : error ? (
+            <ErrorState message={error} retry={refresh} />
+          ) : filtered.length > 0 ? (
+            <div className="tournaments-grid">
+              {filtered.map((tournament, idx) => (
+                <TournamentCard key={tournament.id} tournament={tournament} index={idx} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No tournaments found"
+              copy="Try adjusting your format or ball filters, or clear your search query."
+              action={
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setFormat('All');
+                    setBall('All');
+                    setSearch('');
+                  }}
+                >
+                  Reset All Filters
+                </button>
+              }
+            />
+          )}
+        </section>
+
+        {/* Clean Matchday Guide */}
+        <section className="matchday-guide">
+          <div className="guide-card">
+            <div className="guide-header">
+              <span className="guide-kicker">Matchday Process</span>
+              <h3>Three Steps To The Crease</h3>
+            </div>
+            <div className="guide-steps">
+              <div className="step-item">
+                <span className="step-number">1</span>
+                <div className="step-content">
+                  <strong>Choose & Register</strong>
+                  <p>Pick your fixture, fill your captain details and squad roster of up to 40 players.</p>
+                </div>
+              </div>
+              <div className="step-item">
+                <span className="step-number">2</span>
+                <div className="step-content">
+                  <strong>UPI / Desk Verification</strong>
+                  <p>Submit your payment UTR reference. The stadium desk reviews and verifies your slot.</p>
+                </div>
+              </div>
+              <div className="step-item">
+                <span className="step-number">3</span>
+                <div className="step-content">
+                  <strong>Digital Team Pass</strong>
+                  <p>Receive your confirmed matchday pass with QR code, match timings, and pitch allocation.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <PublicFooter />
+      <MobileBottomNav />
+    </div>
+  );
 }
 
 function TournamentPage() {
   const { tournamentId } = useParams();
   const { tournaments, loading, error, refresh } = useData();
   const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('register'); // 'register' | 'rules' | 'venue'
+
   const tournament = tournaments.find((item) => item.id === tournamentId);
-  if (loading) return <><PublicHeader /><main><LoadingState /></main><PublicFooter /></>;
-  if (error) return <><PublicHeader /><main className="wrap"><ErrorState message={error} retry={refresh} /></main><PublicFooter /></>;
-  if (!tournament) return <><PublicHeader /><main className="wrap"><EmptyState title="Tournament not found" copy="This campaign may have ended or its link may be incomplete." action={<Link to="/tournaments" className="button button--dark">Browse tournaments</Link>} /></main><PublicFooter /></>;
-  return <><PublicHeader /><main className="campaign-page">
-    <div className="campaign-ribbon"><div className="wrap"><span>{tournament.format} · {tournament.ballType}</span><span>Registration closes <strong>{dateLabel(tournament.deadline)}</strong></span><a href="#register">Register your team <ArrowDownRight size={16} /></a></div></div>
-    <section className="campaign-hero"><div className="wrap campaign-hero-grid"><div className="campaign-copy"><Link to="/tournaments" className="back-link"><ArrowLeft size={16} /> All tournaments</Link><h1>{tournament.title}</h1><EventMeta tournament={tournament} /><p className="campaign-description">{tournament.description}</p><div className="campaign-price"><strong>{money(tournament.entryFee)}</strong><span>entry per team</span></div><a className="button button--dark" href="#register">Enter the tournament <ArrowDownRight size={18} /></a></div><CricketPhoto crop="pitch" alt="Tournament cricket ground under floodlights" className="campaign-photo" /></div></section>
-    <section className="campaign-facts"><div className="wrap facts-grid"><div><span>Match dates</span><strong>{dateLabel(tournament.startsAt)}{tournament.endsAt && new Date(tournament.startsAt).toDateString() !== new Date(tournament.endsAt).toDateString() ? ` – ${dateLabel(tournament.endsAt)}` : ''}</strong></div><div><span>Format</span><strong>{tournament.format} · {tournament.ballType}</strong></div><div><span>Venue</span><strong>{tournament.venue}</strong></div></div></section>
-    <section className="matchday-rundown"><div className="wrap rundown-grid"><div><p>Fixture details</p><h2>Make the<br />dates yours.</h2><span>Keep the details close. We’ll see you at the ground.</span></div><div className="rundown-dates"><div><span>Registration closes</span><strong>{dateLabel(tournament.deadline)}</strong><small>Entries must be submitted before the deadline.</small></div><div><span>First match</span><strong>{dateLabel(tournament.startsAt)}</strong><small>{tournament.format} · {tournament.ballType}</small></div>{tournament.endsAt && new Date(tournament.endsAt).toDateString() !== new Date(tournament.startsAt).toDateString() && <div><span>Final match date</span><strong>{dateLabel(tournament.endsAt)}</strong><small>{tournament.venue}</small></div>}</div></div></section>
-    <section id="register" className="register-section wrap"><div className="register-intro"><p className="section-kicker">Put your XI on the sheet</p><h2>Walk out<br />together.</h2><p>Share your team and squad details, then submit your payment reference. The stadium desk will review it and update your entry.</p><div className="support-box"><CircleHelp size={19} /><div><strong>Need a hand?</strong>{tournament.payment?.supportPhone ? <a href={`tel:${tournament.payment.supportPhone.replace(/\s/g, '')}`}>{tournament.payment.supportPhone}</a> : <span>Contact the stadium desk</span>}{tournament.payment?.supportEmail && <a href={`mailto:${tournament.payment.supportEmail}`}>{tournament.payment.supportEmail}</a>}</div></div><div className="campaign-side-score"><span>YOUR MATCH</span><strong>{tournament.title}</strong><p>{dateLabel(tournament.startsAt)} · {tournament.venue}</p><b>{money(tournament.entryFee)} <small>per team</small></b></div></div>
-      <RegistrationForm tournament={tournament} attribution={{ source: searchParams.get('utm_source') || '', campaign: searchParams.get('utm_campaign') || '' }} />
-    </section>
-    <section className="terms-section"><div className="wrap terms-grid"><h2>Before you play</h2><div className="markdown-copy"><Markdown>{tournament.termsMarkdown || 'Tournament terms will be shared by the organizer.'}</Markdown></div></div></section>
-  </main><PublicFooter /></>;
+
+  if (loading) {
+    return (
+      <div className="page-shell">
+        <PublicHeader />
+        <main className="main-content">
+          <LoadingState label="Loading tournament details…" />
+        </main>
+        <PublicFooter />
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-shell">
+        <PublicHeader />
+        <main className="main-content">
+          <ErrorState message={error} retry={refresh} />
+        </main>
+        <PublicFooter />
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
+  if (!tournament) {
+    return (
+      <div className="page-shell">
+        <PublicHeader />
+        <main className="main-content">
+          <EmptyState
+            title="Tournament fixture not found"
+            copy="This tournament may have ended or the link is invalid."
+            action={
+              <Link to="/tournaments" className="btn btn-primary">
+                Browse Tournaments
+              </Link>
+            }
+          />
+        </main>
+        <PublicFooter />
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
+  const isClosed = tournament.deadline && new Date(tournament.deadline).getTime() < Date.now();
+
+  return (
+    <div className="page-shell">
+      <PwaInstallBanner />
+      <PublicHeader />
+      <main className="main-content">
+        {/* Sticky Sub-Header on Desktop */}
+        <div className="fixture-topbar">
+          <div className="fixture-topbar-inner">
+            <Link to="/tournaments" className="back-button">
+              <ArrowLeft size={16} />
+              <span>All Tournaments</span>
+            </Link>
+            <div className="topbar-fee">
+              <span>Entry Fee:</span>
+              <strong>{money(tournament.entryFee)}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Fixture Hero Card */}
+        <section className="fixture-hero-card">
+          <div className="fixture-hero-header">
+            <EventBadge format={tournament.format} ballType={tournament.ballType} />
+            <h1 className="fixture-title">{tournament.title}</h1>
+            <div className="fixture-meta-grid">
+              <div className="meta-item">
+                <Calendar size={16} />
+                <div>
+                  <span>Tournament Dates</span>
+                  <strong>
+                    {dateLabel(tournament.startsAt)}
+                    {tournament.endsAt && new Date(tournament.startsAt).toDateString() !== new Date(tournament.endsAt).toDateString()
+                      ? ` – ${dateLabel(tournament.endsAt)}`
+                      : ''}
+                  </strong>
+                </div>
+              </div>
+              <div className="meta-item">
+                <MapPin size={16} />
+                <div>
+                  <span>Venue</span>
+                  <strong>{tournament.venue || 'KMT Cricket Stadium, Bengaluru'}</strong>
+                </div>
+              </div>
+              <div className="meta-item">
+                <Clock size={16} />
+                <div>
+                  <span>Registration Deadline</span>
+                  <strong className={isClosed ? 'text-red' : ''}>
+                    {isClosed ? 'Closed' : dateLabel(tournament.deadline)}
+                  </strong>
+                </div>
+              </div>
+            </div>
+            {tournament.description && <p className="fixture-description">{tournament.description}</p>}
+          </div>
+
+          {/* Quick Segmented Tabs for Mobile */}
+          <div className="tab-bar">
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'register' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('register')}
+            >
+              <Ticket size={16} />
+              <span>Team Registration</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'rules' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('rules')}
+            >
+              <ShieldCheck size={16} />
+              <span>Rules & Terms</span>
+            </button>
+          </div>
+        </section>
+
+        {/* Tab Content */}
+        {activeTab === 'register' ? (
+          <section id="register-form" className="registration-container">
+            <RegistrationForm
+              tournament={tournament}
+              attribution={{
+                source: searchParams.get('utm_source') || '',
+                campaign: searchParams.get('utm_campaign') || '',
+              }}
+            />
+          </section>
+        ) : (
+          <section className="rules-container">
+            <div className="rules-card">
+              <h3>Tournament Terms & Playing Conditions</h3>
+              <div className="markdown-render">
+                <Markdown>{tournament.termsMarkdown || 'Standard KMT Cricket Stadium tournament rules apply.'}</Markdown>
+              </div>
+              <div className="support-card">
+                <Phone size={18} />
+                <div>
+                  <strong>Tournament Desk Assistance</strong>
+                  {tournament.payment?.supportPhone && (
+                    <a href={`tel:${tournament.payment.supportPhone.replace(/\s/g, '')}`}>{tournament.payment.supportPhone}</a>
+                  )}
+                  {tournament.payment?.supportEmail && (
+                    <a href={`mailto:${tournament.payment.supportEmail}`}>{tournament.payment.supportEmail}</a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
+
+      {/* Floating Bottom Action Bar for Mobile */}
+      <aside className="mobile-action-bar">
+        <div className="action-bar-info">
+          <span>Fee per team</span>
+          <strong>{money(tournament.entryFee)}</strong>
+        </div>
+        <button
+          type="button"
+          className="btn btn-gold"
+          onClick={() => {
+            setActiveTab('register');
+            document.getElementById('register-form')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          disabled={isClosed}
+        >
+          {isClosed ? 'Closed' : 'Register Team'}
+        </button>
+      </aside>
+
+      <PublicFooter />
+      <MobileBottomNav />
+    </div>
+  );
 }
 
 function RegistrationForm({ tournament, attribution }) {
-  const [values, setValues] = useState({ teamName: '', captainName: '', email: '', phone: '', players: [{ name: '', jersey: '', role: '' }], customAnswers: {}, paymentMethod: 'upi', reference: '', acceptedTerms: false });
+  const [values, setValues] = useState({
+    teamName: '',
+    captainName: '',
+    email: '',
+    phone: '',
+    players: [{ name: '', jersey: '', role: 'Batter' }],
+    customAnswers: {},
+    paymentMethod: 'upi',
+    reference: '',
+    acceptedTerms: false,
+  });
+
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState('');
+  const [copiedId, setCopiedId] = useState(false);
+
   const set = (key, value) => setValues((current) => ({ ...current, [key]: value }));
-  const setPlayer = (index, key, value) => setValues((current) => ({ ...current, players: current.players.map((player, i) => i === index ? { ...player, [key]: value } : player) }));
+  const setPlayer = (index, key, value) =>
+    setValues((current) => ({
+      ...current,
+      players: current.players.map((player, i) => (i === index ? { ...player, [key]: value } : player)),
+    }));
+
   const submit = async (event) => {
     event.preventDefault();
     const next = validateRegistration(tournament, values);
@@ -127,42 +808,492 @@ function RegistrationForm({ tournament, attribution }) {
     if (Object.keys(next).length) return;
     setBusy(true);
     try {
-      const id = await createRegistration({ ...values, tournamentId: tournament.id, email: values.email.trim().toLowerCase(), ownerUid: null, status: 'PENDING', adminNote: '', attribution, submittedAt: new Date().toISOString() });
+      const id = await createRegistration({
+        ...values,
+        tournamentId: tournament.id,
+        email: values.email.trim().toLowerCase(),
+        ownerUid: null,
+        status: 'PENDING',
+        adminNote: '',
+        attribution,
+        submittedAt: new Date().toISOString(),
+      });
       setResult(id);
     } catch (error) {
       console.error(error);
-      setErrors({ submit: 'Registration could not be saved. Check your connection and try again.' });
-    } finally { setBusy(false); }
+      setErrors({ submit: 'Registration could not be saved. Check connection and retry.' });
+    } finally {
+      setBusy(false);
+    }
   };
-  if (result) return <div className="registration-success" role="status"><span className="success-mark"><Check size={24} /></span><p className="section-kicker">Entry received</p><h3>You’re on the sheet.</h3><p>Your registration ID is <strong>{result}</strong>. Payment status is pending until the stadium desk checks your reference.</p><Link to={`/auth?returnTo=${encodeURIComponent('/user/dashboard')}`} className="button button--dark">Sign in to track it <ArrowRight size={17} /></Link><button className="text-link" onClick={() => navigator.clipboard?.writeText(result)}>Copy registration ID <Copy size={15} /></button></div>;
-  const fieldError = (key) => errors[key] ? <span className="field-error">{errors[key]}</span> : null;
-  return <form className="registration-form" onSubmit={submit} noValidate>
-    <div className="form-heading"><div><h3>Team registration</h3><p>Fields marked required must be completed.</p></div><span className="form-fee">{money(tournament.entryFee)}</span></div>
-    {errors.deadline && <div className="form-alert" role="alert">{errors.deadline}</div>}
-    <div className="form-subsection form-contact"><div className="subsection-title"><h4>Team contact</h4><span>Captain and team</span></div><div className="field-grid"><label>Team name *<input value={values.teamName} maxLength={80} onChange={(event) => set('teamName', event.target.value)} />{fieldError('teamName')}</label><label>Captain name *<input value={values.captainName} maxLength={80} onChange={(event) => set('captainName', event.target.value)} />{fieldError('captainName')}</label><label>Email address *<input type="email" autoComplete="email" value={values.email} onChange={(event) => set('email', event.target.value)} />{fieldError('email')}</label><label>Phone number *<input type="tel" autoComplete="tel" value={values.phone} onChange={(event) => set('phone', event.target.value)} />{fieldError('phone')}</label></div></div>
-    <div className="form-subsection"><div className="subsection-title"><h4>Your squad</h4><span>{values.players.length} of 40 players</span></div>{values.players.map((player, index) => <div className="player-row" key={index}><label className="player-name">Player {index + 1} name *<input value={player.name} maxLength={80} onChange={(event) => setPlayer(index, 'name', event.target.value)} /></label><label>Jersey<input value={player.jersey} maxLength={8} onChange={(event) => setPlayer(index, 'jersey', event.target.value)} /></label><label>Role<input value={player.role} maxLength={24} placeholder="Batter" onChange={(event) => setPlayer(index, 'role', event.target.value)} /></label>{values.players.length > 1 && <button type="button" className="icon-button remove-player" aria-label={`Remove player ${index + 1}`} onClick={() => set('players', values.players.filter((_, i) => i !== index))}><X size={17} /></button>}</div>)}{fieldError('players')}<button type="button" className="text-link" disabled={values.players.length >= 40} onClick={() => set('players', [...values.players, { name: '', jersey: '', role: '' }])}><Plus size={16} /> Add player</button></div>
-    {(tournament.formFields || []).length > 0 && <div className="form-subsection"><div className="subsection-title"><h4>Team details</h4><span>Organizer questions</span></div><div className="field-grid">{tournament.formFields.map((field) => <label key={field.id}>{field.label}{field.required ? ' *' : ''}{field.type === 'select' ? <select value={values.customAnswers[field.id] || ''} onChange={(event) => setValues((current) => ({ ...current, customAnswers: { ...current.customAnswers, [field.id]: event.target.value } }))}><option value="">Choose one</option>{(field.options || []).map((option) => <option key={option}>{option}</option>)}</select> : field.type === 'checkbox' ? <span className="checkbox-field"><input type="checkbox" checked={Boolean(values.customAnswers[field.id])} onChange={(event) => setValues((current) => ({ ...current, customAnswers: { ...current.customAnswers, [field.id]: event.target.checked } }))} /> Yes</span> : <input type={field.type === 'number' ? 'number' : 'text'} value={values.customAnswers[field.id] || ''} onChange={(event) => setValues((current) => ({ ...current, customAnswers: { ...current.customAnswers, [field.id]: event.target.value } }))} />}{fieldError(field.id)}</label>)}</div></div>}
-    <div className="form-subsection payment-section"><div className="subsection-title"><h4>Entry payment</h4><span>Manual verification</span></div><div className="payment-options"><label className={values.paymentMethod === 'upi' ? 'payment-option is-selected' : 'payment-option'}><input type="radio" name="payment" value="upi" checked={values.paymentMethod === 'upi'} onChange={() => set('paymentMethod', 'upi')} /><span><strong>UPI transfer</strong><small>{tournament.payment?.upiId || 'Ask the stadium desk for the UPI ID'}</small></span></label><label className={values.paymentMethod === 'offline' ? 'payment-option is-selected' : 'payment-option'}><input type="radio" name="payment" value="offline" checked={values.paymentMethod === 'offline'} onChange={() => set('paymentMethod', 'offline')} /><span><strong>Pay at stadium</strong><small>{tournament.payment?.offlineInstructions || 'Contact the stadium desk.'}</small></span></label></div>{values.paymentMethod === 'upi' && tournament.payment?.upiId && <UPIPaymentQR tournament={tournament} />}<label>UTR or bank reference{values.paymentMethod === 'upi' ? ' *' : ''}<input value={values.reference} maxLength={100} onChange={(event) => set('reference', event.target.value)} placeholder="Enter the 6–30 digit reference" />{fieldError('reference')}</label></div>
-    <label className="terms-check"><input type="checkbox" checked={values.acceptedTerms} onChange={(event) => set('acceptedTerms', event.target.checked)} /> <span>I have read and agree to the tournament terms above. *</span></label>{fieldError('acceptedTerms')}
-    {errors.submit && <div className="form-alert" role="alert">{errors.submit}</div>}
-    <button className="button button--dark button--wide" disabled={busy || Boolean(errors.deadline)}>{busy ? 'Saving your entry…' : 'Submit team registration'} <ArrowUpRight size={17} /></button>
-  </form>;
-}
 
-function StatusPage() {
-  const { user } = useAuth();
-  return <><PublicHeader /><main className="status-page wrap"><div className="status-message"><div className="status-icon"><ShieldCheck size={25} /></div><p className="section-kicker">Registration status</p><h1>Keep your team<br />in the loop.</h1><p>Sign in with the verified email used for your registration. We’ll link your guest entry to your dashboard so you can follow payment review, see your roster and open a confirmed pass.</p>{user ? <Link className="button button--dark" to="/user/dashboard">Go to your dashboard <ArrowRight size={17} /></Link> : <Link className="button button--dark" to={`/auth?returnTo=${encodeURIComponent('/user/dashboard')}`}>Sign in to view status <ArrowRight size={17} /></Link>}</div><CricketPhoto crop="pavilion" alt="Cricket pavilion and empty field in morning light" className="status-photo" /></main><PublicFooter /></>;
+  if (result) {
+    return (
+      <div className="success-ticket-card" role="status">
+        <div className="ticket-cutout-top" />
+        <div className="success-badge-wrap">
+          <Check size={32} />
+        </div>
+        <span className="success-kicker">Registration Submitted</span>
+        <h2 className="success-title">Your Team Is On The Sheet</h2>
+        <p className="success-desc">
+          Your entry ID is <strong className="id-code">{result}</strong>. The stadium desk will verify your payment reference and issue your match pass.
+        </p>
+
+        <div className="ticket-summary">
+          <div>
+            <span>Team:</span>
+            <strong>{values.teamName}</strong>
+          </div>
+          <div>
+            <span>Captain:</span>
+            <strong>{values.captainName}</strong>
+          </div>
+          <div>
+            <span>Payment:</span>
+            <strong>{values.paymentMethod === 'upi' ? `UPI (${values.reference})` : 'Offline at Desk'}</strong>
+          </div>
+        </div>
+
+        <div className="ticket-actions">
+          <button
+            type="button"
+            className="btn btn-outline btn-block"
+            onClick={() => {
+              navigator.clipboard?.writeText(result);
+              setCopiedId(true);
+              setTimeout(() => setCopiedId(false), 2000);
+            }}
+          >
+            {copiedId ? <Check size={16} /> : <Copy size={16} />}
+            <span>{copiedId ? 'Copied ID' : 'Copy Registration ID'}</span>
+          </button>
+          <Link to={`/auth?returnTo=${encodeURIComponent('/user/dashboard')}`} className="btn btn-primary btn-block">
+            <span>Sign In To Track Pass</span>
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+        <div className="ticket-cutout-bottom" />
+      </div>
+    );
+  }
+
+  const fieldError = (key) => (errors[key] ? <span className="field-error-text">{errors[key]}</span> : null);
+
+  return (
+    <form className="modern-form" onSubmit={submit} noValidate>
+      {errors.deadline && <div className="alert alert-danger">{errors.deadline}</div>}
+      {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
+
+      {/* Step 1: Team & Captain */}
+      <fieldset className="form-step-card">
+        <legend className="step-legend">
+          <span className="step-tag">1</span>
+          <div>
+            <h3>Team & Captain Contact</h3>
+            <p>Official contact details for tournament communications.</p>
+          </div>
+        </legend>
+
+        <div className="inputs-grid">
+          <label className="input-field">
+            <span>Team Name *</span>
+            <input
+              type="text"
+              placeholder="e.g. Bangalore Strikers XI"
+              value={values.teamName}
+              maxLength={80}
+              onChange={(e) => set('teamName', e.target.value)}
+              className={errors.teamName ? 'has-error' : ''}
+            />
+            {fieldError('teamName')}
+          </label>
+
+          <label className="input-field">
+            <span>Captain Name *</span>
+            <input
+              type="text"
+              placeholder="Full name of Captain"
+              value={values.captainName}
+              maxLength={80}
+              onChange={(e) => set('captainName', e.target.value)}
+              className={errors.captainName ? 'has-error' : ''}
+            />
+            {fieldError('captainName')}
+          </label>
+
+          <label className="input-field">
+            <span>Email Address *</span>
+            <input
+              type="email"
+              placeholder="captain@example.com"
+              value={values.email}
+              autoComplete="email"
+              onChange={(e) => set('email', e.target.value)}
+              className={errors.email ? 'has-error' : ''}
+            />
+            {fieldError('email')}
+          </label>
+
+          <label className="input-field">
+            <span>Phone / WhatsApp *</span>
+            <input
+              type="tel"
+              placeholder="+91 98765 43210"
+              value={values.phone}
+              autoComplete="tel"
+              onChange={(e) => set('phone', e.target.value)}
+              className={errors.phone ? 'has-error' : ''}
+            />
+            {fieldError('phone')}
+          </label>
+        </div>
+      </fieldset>
+
+      {/* Step 2: Squad Roster */}
+      <fieldset className="form-step-card">
+        <legend className="step-legend">
+          <span className="step-tag">2</span>
+          <div>
+            <h3>Squad Roster</h3>
+            <p>
+              {values.players.length} of 40 players registered. Minimum 1 player required.
+            </p>
+          </div>
+        </legend>
+
+        <div className="players-list">
+          {values.players.map((player, idx) => (
+            <div className="player-row-card" key={idx}>
+              <span className="player-index">#{idx + 1}</span>
+              <div className="player-inputs">
+                <input
+                  type="text"
+                  placeholder={`Player ${idx + 1} Name *`}
+                  value={player.name}
+                  maxLength={80}
+                  onChange={(e) => setPlayer(idx, 'name', e.target.value)}
+                  className="player-input-name"
+                />
+                <input
+                  type="text"
+                  placeholder="Jersey #"
+                  value={player.jersey}
+                  maxLength={5}
+                  onChange={(e) => setPlayer(idx, 'jersey', e.target.value)}
+                  className="player-input-jersey"
+                />
+                <select
+                  value={player.role || 'Batter'}
+                  onChange={(e) => setPlayer(idx, 'role', e.target.value)}
+                  className="player-input-role"
+                >
+                  <option value="Batter">Batter</option>
+                  <option value="Bowler">Bowler</option>
+                  <option value="All-rounder">All-rounder</option>
+                  <option value="Wicket-keeper">WK / Batter</option>
+                </select>
+              </div>
+              {values.players.length > 1 && (
+                <button
+                  type="button"
+                  className="btn-delete-player"
+                  onClick={() => set('players', values.players.filter((_, i) => i !== idx))}
+                  aria-label={`Remove Player ${idx + 1}`}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          ))}
+          {fieldError('players')}
+
+          <button
+            type="button"
+            className="btn btn-outline btn-block mt-2"
+            disabled={values.players.length >= 40}
+            onClick={() => set('players', [...values.players, { name: '', jersey: '', role: 'Batter' }])}
+          >
+            <Plus size={16} />
+            <span>Add Another Player</span>
+          </button>
+        </div>
+      </fieldset>
+
+      {/* Step 3: Custom Organizer Questions */}
+      {(tournament.formFields || []).length > 0 && (
+        <fieldset className="form-step-card">
+          <legend className="step-legend">
+            <span className="step-tag">3</span>
+            <div>
+              <h3>Additional Information</h3>
+              <p>Questions required by the stadium organizer.</p>
+            </div>
+          </legend>
+
+          <div className="inputs-grid">
+            {tournament.formFields.map((field) => (
+              <label key={field.id} className="input-field">
+                <span>
+                  {field.label} {field.required && '*'}
+                </span>
+                {field.type === 'select' ? (
+                  <select
+                    value={values.customAnswers[field.id] || ''}
+                    onChange={(e) =>
+                      setValues((curr) => ({
+                        ...curr,
+                        customAnswers: { ...curr.customAnswers, [field.id]: e.target.value },
+                      }))
+                    }
+                  >
+                    <option value="">Select option</option>
+                    {(field.options || []).map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : field.type === 'checkbox' ? (
+                  <label className="checkbox-wrap">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(values.customAnswers[field.id])}
+                      onChange={(e) =>
+                        setValues((curr) => ({
+                          ...curr,
+                          customAnswers: { ...curr.customAnswers, [field.id]: e.target.checked },
+                        }))
+                      }
+                    />
+                    <span>Yes / Confirm</span>
+                  </label>
+                ) : (
+                  <input
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    value={values.customAnswers[field.id] || ''}
+                    onChange={(e) =>
+                      setValues((curr) => ({
+                        ...curr,
+                        customAnswers: { ...curr.customAnswers, [field.id]: e.target.value },
+                      }))
+                    }
+                  />
+                )}
+                {fieldError(field.id)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
+      {/* Step 4: Payment Verification */}
+      <fieldset className="form-step-card">
+        <legend className="step-legend">
+          <span className="step-tag">{tournament.formFields?.length ? '4' : '3'}</span>
+          <div>
+            <h3>Entry Fee Payment</h3>
+            <p>Choose your payment method and enter your transfer reference.</p>
+          </div>
+        </legend>
+
+        <div className="payment-selector-tabs">
+          <label className={`payment-pill ${values.paymentMethod === 'upi' ? 'is-selected' : ''}`}>
+            <input
+              type="radio"
+              name="payment"
+              value="upi"
+              checked={values.paymentMethod === 'upi'}
+              onChange={() => set('paymentMethod', 'upi')}
+            />
+            <div className="payment-pill-text">
+              <strong>UPI Direct Transfer</strong>
+              <span>Instant QR payment verification</span>
+            </div>
+          </label>
+          <label className={`payment-pill ${values.paymentMethod === 'offline' ? 'is-selected' : ''}`}>
+            <input
+              type="radio"
+              name="payment"
+              value="offline"
+              checked={values.paymentMethod === 'offline'}
+              onChange={() => set('paymentMethod', 'offline')}
+            />
+            <div className="payment-pill-text">
+              <strong>Pay at Stadium Desk</strong>
+              <span>Cash or card on matchday</span>
+            </div>
+          </label>
+        </div>
+
+        {values.paymentMethod === 'upi' && (
+          <div className="upi-box">
+            {tournament.payment?.upiId ? (
+              <UPIPaymentQR tournament={tournament} />
+            ) : (
+              <p className="upi-fallback-note">Please ask the stadium organizer for the official UPI ID.</p>
+            )}
+            <label className="input-field mt-3">
+              <span>UPI UTR / Bank Reference Number *</span>
+              <input
+                type="text"
+                placeholder="12-digit transaction ID or UTR"
+                value={values.reference}
+                maxLength={60}
+                onChange={(e) => set('reference', e.target.value)}
+                className={errors.reference ? 'has-error' : ''}
+              />
+              {fieldError('reference')}
+              <small className="field-hint">Found in Google Pay, PhonePe, Paytm, or bank transfer confirmation.</small>
+            </label>
+          </div>
+        )}
+
+        {values.paymentMethod === 'offline' && (
+          <div className="offline-box">
+            <p>
+              {tournament.payment?.offlineInstructions ||
+                'Pay the entry fee at the KMT Cricket Stadium registration counter at least 1 hour prior to your first fixture.'}
+            </p>
+            <label className="input-field mt-3">
+              <span>Receipt Number / Notes (Optional)</span>
+              <input
+                type="text"
+                placeholder="Optional desk receipt or payer note"
+                value={values.reference}
+                maxLength={60}
+                onChange={(e) => set('reference', e.target.value)}
+              />
+            </label>
+          </div>
+        )}
+      </fieldset>
+
+      {/* Step 5: Terms & Submit */}
+      <div className="form-submit-card">
+        <label className="terms-checkbox-label">
+          <input
+            type="checkbox"
+            checked={values.acceptedTerms}
+            onChange={(e) => set('acceptedTerms', e.target.checked)}
+          />
+          <span>
+            I accept the tournament playing conditions, conduct rules, and stadium desk decisions. *
+          </span>
+        </label>
+        {fieldError('acceptedTerms')}
+
+        <button type="submit" className="btn btn-gold btn-block btn-lg" disabled={busy || Boolean(errors.deadline)}>
+          {busy ? (
+            <span>Submitting Registration…</span>
+          ) : (
+            <>
+              <span>Submit Team Registration</span>
+              <ArrowRight size={18} />
+            </>
+          )}
+        </button>
+      </div>
+    </form>
+  );
 }
 
 function UPIPaymentQR({ tournament }) {
   const [image, setImage] = useState('');
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const upiId = tournament.payment?.upiId;
+
   useEffect(() => {
-    const payee = tournament.payment?.upiId;
-    if (!payee) { setImage(''); return; }
-    const params = new URLSearchParams({ pa: payee, pn: 'KMT Cricket Stadium', am: String(Number(tournament.entryFee || 0).toFixed(2)), cu: 'INR', tn: tournament.title });
-    QRCode.toDataURL(`upi://pay?${params}`, { width: 176, margin: 1, color: { dark: '#17392d', light: '#ffffff' } }).then(setImage).catch(() => setImage(''));
-  }, [tournament.id, tournament.payment?.upiId, tournament.entryFee, tournament.title]);
-  return image ? <div className="upi-qr"><img src={image} alt={`UPI payment QR for ${money(tournament.entryFee)} to ${tournament.payment.upiId}`} /><p>Scan to pay {money(tournament.entryFee)}. Enter the UTR below; the organizer confirms it manually.</p></div> : null;
+    if (!upiId) {
+      setImage('');
+      return;
+    }
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: 'KMT Cricket Stadium',
+      am: String(Number(tournament.entryFee || 0).toFixed(2)),
+      cu: 'INR',
+      tn: tournament.title,
+    });
+    QRCode.toDataURL(`upi://pay?${params}`, {
+      width: 190,
+      margin: 1,
+      color: { dark: '#0b3829', light: '#ffffff' },
+    })
+      .then(setImage)
+      .catch(() => setImage(''));
+  }, [tournament.id, upiId, tournament.entryFee, tournament.title]);
+
+  return (
+    <div className="upi-qr-widget">
+      {image && (
+        <div className="qr-box">
+          <img src={image} alt={`UPI payment QR for ${tournament.title}`} />
+        </div>
+      )}
+      <div className="upi-info">
+        <div className="upi-row">
+          <span>Official Stadium UPI ID:</span>
+          <strong>{upiId}</strong>
+        </div>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline"
+          onClick={() => {
+            navigator.clipboard?.writeText(upiId);
+            setCopiedUpi(true);
+            setTimeout(() => setCopiedUpi(false), 2000);
+          }}
+        >
+          {copiedUpi ? <Check size={14} /> : <Copy size={14} />}
+          <span>{copiedUpi ? 'Copied UPI ID' : 'Copy UPI ID'}</span>
+        </button>
+        <div className="upi-amount">
+          <span>Amount to Pay:</span>
+          <strong className="text-gold">{money(tournament.entryFee)}</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusPage() {
+  const { user } = useAuth();
+  return (
+    <div className="page-shell">
+      <PwaInstallBanner />
+      <PublicHeader />
+      <main className="main-content">
+        <div className="status-hero">
+          <div className="status-hero-card">
+            <div className="status-icon-badge">
+              <ShieldCheck size={28} />
+            </div>
+            <h1>Track Your Match Pass</h1>
+            <p>
+              Check your team registration status, view confirmed matchday entry passes, and download printable roster cards.
+            </p>
+            {user ? (
+              <Link to="/user/dashboard" className="btn btn-gold btn-lg">
+                <span>View My Entries Dashboard</span>
+                <ArrowRight size={18} />
+              </Link>
+            ) : (
+              <div className="status-auth-box">
+                <p>Sign in with your verified email to automatically link guest registrations:</p>
+                <Link to={`/auth?returnTo=${encodeURIComponent('/user/dashboard')}`} className="btn btn-gold btn-lg">
+                  <span>Sign In To View Status</span>
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      <PublicFooter />
+      <MobileBottomNav />
+    </div>
+  );
 }
 
 function AuthPage() {
@@ -177,68 +1308,465 @@ function AuthPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+
   useEffect(() => {
-    if (user) navigate(user.isAdmin ? '/admin' : returnTo, { replace: true, state: { from: location.pathname } });
+    if (user) {
+      navigate(user.isAdmin ? '/admin' : returnTo, { replace: true, state: { from: location.pathname } });
+    }
   }, [user?.uid, user?.isAdmin]);
-  const run = async (action) => { setBusy(true); setError(''); setMessage(''); try { await action(); } catch (cause) { setError(cause.message?.replace('Firebase: ', '') || 'Sign-in failed. Please try again.'); } finally { setBusy(false); } };
-  return <><PublicHeader /><main className="auth-page wrap"><div className="auth-poster"><p>KMT · PLAY THE NEXT INNINGS</p><h1>Your team.<br />Your score.</h1><CricketPhoto crop="practice" alt="Local players warming up together" /></div><section className="auth-panel"><Link className="back-link" to="/tournaments"><ArrowLeft size={16} /> Back to tournaments</Link><h2>{mode === 'signin' ? 'Sign in to KMT' : 'Create your account'}</h2><p>Use the verified email from your team registration to find your entry.</p>
-    <button className="button button--outline button--wide google-button" onClick={() => run(signInGoogle)} disabled={busy}><GoogleMark /> Continue with Google</button><div className="form-divider"><span>or use email</span></div><form className="auth-form" onSubmit={(event) => { event.preventDefault(); run(() => mode === 'signin' ? signInEmail(email, password) : registerEmail(email, password).then(() => setMessage('Check your inbox to verify your email. Then sign in to claim your registration.'))); }}><label>Email address<input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Password<input type="password" required minLength={8} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} /></label><button className="button button--dark button--wide" disabled={busy}>{busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'} <ArrowRight size={17} /></button></form><button className="text-link auth-switch" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setMessage(''); }}>{mode === 'signin' ? 'New to KMT? Create an account' : 'Already registered? Sign in'}</button>{user && !user.emailVerified && <button className="text-link" onClick={() => run(resendVerification)}>Resend verification email</button>}
-    {error && <p className="form-alert" role="alert">{error}</p>}{message && <p className="form-success" role="status">{message}</p>}
-  </section></main><PublicFooter /></>;
+
+  const run = async (action) => {
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await action();
+    } catch (cause) {
+      setError(cause.message?.replace('Firebase: ', '') || 'Sign-in failed. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="page-shell">
+      <PublicHeader />
+      <main className="main-content auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <span className="auth-brand-pill">KMT Stadium Account</span>
+            <h2>{mode === 'signin' ? 'Sign In To KMT Cricket' : 'Create Your Player Account'}</h2>
+            <p>Track team registrations, verify entry fees, and view matchday passes.</p>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-google btn-block"
+            onClick={() => run(signInGoogle)}
+            disabled={busy}
+          >
+            <span className="google-icon">G</span>
+            <span>Continue with Google</span>
+          </button>
+
+          <div className="divider">
+            <span>or with email</span>
+          </div>
+
+          <form
+            className="auth-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              run(() =>
+                mode === 'signin'
+                  ? signInEmail(email, password)
+                  : registerEmail(email, password).then(() =>
+                      setMessage('Verification email sent! Check your inbox to verify before claiming registrations.')
+                    )
+              );
+            }}
+          >
+            <label className="input-field">
+              <span>Email Address</span>
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="captain@example.com"
+              />
+            </label>
+
+            <label className="input-field">
+              <span>Password</span>
+              <input
+                type="password"
+                required
+                minLength={8}
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+              />
+            </label>
+
+            <button type="submit" className="btn btn-gold btn-block" disabled={busy}>
+              {busy ? 'Processing…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
+
+          {error && <div className="alert alert-danger mt-3">{error}</div>}
+          {message && <div className="alert alert-success mt-3">{message}</div>}
+
+          <div className="auth-footer-toggle">
+            <button
+              type="button"
+              className="text-link"
+              onClick={() => {
+                setMode(mode === 'signin' ? 'signup' : 'signin');
+                setError('');
+                setMessage('');
+              }}
+            >
+              {mode === 'signin' ? "Don't have an account? Sign up" : 'Already registered? Sign in here'}
+            </button>
+            {user && !user.emailVerified && (
+              <button type="button" className="text-link mt-1" onClick={() => run(resendVerification)}>
+                Resend verification email
+              </button>
+            )}
+          </div>
+        </div>
+      </main>
+      <PublicFooter />
+      <MobileBottomNav />
+    </div>
+  );
 }
 
-function GoogleMark() { return <span className="google-mark" aria-hidden="true">G</span>; }
-
-function AppRoutes() {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-  if (location.pathname === '/user/dashboard' || location.pathname.startsWith('/admin')) {
-    if (loading) return <LoadingState />;
-    if (!user) return <Navigate to={`/auth?returnTo=${encodeURIComponent(location.pathname)}`} replace />;
-    if (location.pathname.startsWith('/admin') && !user.isAdmin) return <Navigate to="/user/dashboard" replace />;
-    if (location.pathname === '/user/dashboard' && user.isAdmin) return <Navigate to="/admin" replace />;
-  }
-  return <Routes><Route path="/" element={<HomePage />} /><Route path="/tournaments" element={<HomePage />} /><Route path="/t/:tournamentId" element={<TournamentPage />} /><Route path="/status" element={<StatusPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/user/dashboard" element={<UserDashboard />} /><Route path="/admin" element={<AdminDashboard />} /><Route path="/admin/tournaments" element={<AdminTournaments />} /><Route path="/admin/registrations" element={<AdminRegistrations />} /><Route path="*" element={<NotFound />} /></Routes>;
+function StatusChip({ status }) {
+  const s = String(status || '').toLowerCase();
+  return (
+    <span className={`status-pill status-${s}`}>
+      {status === 'PENDING' ? 'Pending Review' : status === 'CONFIRMED' ? 'Confirmed Pass' : 'Rejected'}
+    </span>
+  );
 }
 
 function AppShell({ children, active }) {
   const { user, signOut } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const links = user?.isAdmin ? [['Overview', '/admin'], ['Tournaments', '/admin/tournaments'], ['Registrations', '/admin/registrations']] : [['My entries', '/user/dashboard']];
-  return <div className="app-frame"><aside className={`app-sidebar ${mobileOpen ? 'is-open' : ''}`}><div className="side-brand"><BrandMark /></div><div className="side-context"><span>KMT CRICKET STADIUM</span><strong>{user?.isAdmin ? 'Organizer desk' : 'Player dashboard'}</strong></div><nav aria-label="Dashboard navigation">{links.map(([label, to]) => <Link key={to} className={active === to ? 'active' : ''} to={to} onClick={() => setMobileOpen(false)}>{label}{to === '/admin/registrations' && <span className="nav-count">Review</span>}</Link>)}</nav><div className="side-bottom"><Link to="/tournaments">Public tournaments <ExternalLink size={14} /></Link><button onClick={signOut}><LogOut size={16} /> Sign out</button></div></aside><div className="app-stage"><header className="app-topbar"><button className="icon-button menu-toggle" aria-label="Open navigation" aria-expanded={mobileOpen} onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X size={19} /> : <Menu size={19} />}</button><span>{active === '/admin' ? 'Overview' : active === '/admin/tournaments' ? 'Tournament setup' : active === '/admin/registrations' ? 'Payment verification' : 'My entries'}</span><div className="top-user"><span>{user?.displayName || user?.email}</span><span className="avatar-letter">{(user?.displayName || user?.email || 'K').slice(0, 1).toUpperCase()}</span></div></header><main className="app-sheet"><div className="app-content">{children}</div></main></div></div>;
-}
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const links = user?.isAdmin
+    ? [
+        ['Overview', '/admin', Trophy],
+        ['Tournaments', '/admin/tournaments', Layers],
+        ['Payment Queue', '/admin/registrations', TicketCheck],
+      ]
+    : [['My Entries', '/user/dashboard', Ticket]];
 
-function Kpi({ label, value, note }) { return <div className="kpi"><span>{label}</span><strong>{value}</strong><small>{note}</small></div>; }
-function StatusChip({ status }) { return <span className={`status-chip status-${String(status).toLowerCase()}`}>{status === 'PENDING' ? 'Pending review' : status === 'CONFIRMED' ? 'Confirmed' : 'Rejected'}</span>; }
+  return (
+    <div className="admin-shell">
+      {/* Top Navbar */}
+      <header className="admin-header">
+        <button
+          type="button"
+          className="btn-icon mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+
+        <BrandMark />
+
+        <div className="admin-user-info">
+          <span className="user-email">{user?.displayName || user?.email}</span>
+          <button type="button" className="btn-signout" onClick={signOut} aria-label="Sign out">
+            <LogOut size={16} />
+            <span className="signout-text">Sign Out</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Nav Tabs Bar */}
+      <div className={`admin-nav-tabs ${mobileMenuOpen ? 'is-open' : ''}`}>
+        <div className="nav-tabs-scroller">
+          {links.map(([label, to, Icon]) => (
+            <Link
+              key={to}
+              to={to}
+              className={`nav-tab-item ${active === to ? 'is-active' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Icon size={16} />
+              <span>{label}</span>
+            </Link>
+          ))}
+          <Link to="/tournaments" className="nav-tab-item nav-tab-external">
+            <ExternalLink size={14} />
+            <span>View Public Site</span>
+          </Link>
+        </div>
+      </div>
+
+      <main className="admin-content-stage">{children}</main>
+    </div>
+  );
+}
 
 function AdminDashboard() {
   const { tournaments, registrations, loading, error, refresh } = useData();
   const pending = registrations.filter((row) => row.status === 'PENDING');
-  return <AppShell active="/admin"><div className="app-title-row"><div><p className="app-breadcrumb">KMT / Organizer desk</p><h1>Overview</h1><p>Payment references waiting for a stadium check.</p></div><Link to="/admin/registrations" className="button button--dark">Review queue <ArrowRight size={16} /></Link></div>
-    {loading ? <LoadingState /> : error ? <ErrorState message={error} retry={refresh} /> : <><div className="kpi-strip"><Kpi label="Pending payment checks" value={pending.length} note="Needs organizer review" /><Kpi label="Confirmed teams" value={registrations.filter((row) => row.status === 'CONFIRMED').length} note="Across all tournaments" /><Kpi label="Open tournaments" value={tournaments.filter((row) => row.status === 'published').length} note="Published for registration" /></div>
-      <div className="overview-grid"><section className="work-panel queue-panel"><div className="panel-heading"><div><h2>Payment queue</h2><p>Check the UTR or receipt before confirming.</p></div><Link to="/admin/registrations" className="text-link">All registrations <ArrowRight size={15} /></Link></div>{pending.length ? <div className="queue-list">{pending.slice(0, 5).map((row) => <QueueRow key={row.id} row={row} tournament={tournaments.find((item) => item.id === row.tournamentId)} />)}</div> : <p className="inline-empty">No payment references need a check.</p>}</section>
-      <section className="work-panel tournament-panel"><div className="panel-heading"><div><h2>Upcoming tournaments</h2><p>{tournaments.length} configured</p></div><Link to="/admin/tournaments" className="icon-link" aria-label="Manage tournaments"><ArrowUpRight size={18} /></Link></div>{tournaments.slice(0, 4).map((event) => <div className="mini-event" key={event.id}><div><strong>{event.title}</strong><span>{event.format} · {dateLabel(event.startsAt, { day: 'numeric', month: 'short' })}</span></div><span>{money(event.entryFee)}</span></div>)}<Link to="/admin/tournaments" className="panel-foot-link">Configure tournaments <ArrowRight size={15} /></Link></section></div>
-    </>}
-  </AppShell>;
-}
+  const confirmed = registrations.filter((row) => row.status === 'CONFIRMED');
 
-function QueueRow({ row, tournament }) { return <div className="queue-row"><div className="queue-ident"><span className="queue-mark">{row.teamName.slice(0, 1)}</span><div><strong>{row.teamName}</strong><span>{tournament?.title || 'Tournament'} · {row.captainName}</span></div></div><div className="queue-reference"><span>{row.paymentMethod === 'upi' ? 'UPI reference' : 'Offline receipt'}</span><strong>{row.reference || '—'}</strong></div><StatusChip status={row.status} /></div>; }
+  return (
+    <AppShell active="/admin">
+      <div className="dashboard-container">
+        <div className="page-title-row">
+          <div>
+            <span className="kicker-tag">KMT Desk</span>
+            <h2>Organizer Overview</h2>
+          </div>
+          <Link to="/admin/registrations" className="btn btn-gold btn-sm">
+            <span>Review Payment Queue ({pending.length})</span>
+            <ChevronRight size={16} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState message={error} retry={refresh} />
+        ) : (
+          <>
+            {/* KPI Cards */}
+            <div className="kpi-grid">
+              <div className="kpi-card highlight-kpi">
+                <span>Pending Review</span>
+                <strong>{pending.length}</strong>
+                <small>Needs payment check</small>
+              </div>
+              <div className="kpi-card">
+                <span>Confirmed Teams</span>
+                <strong>{confirmed.length}</strong>
+                <small>Passes issued</small>
+              </div>
+              <div className="kpi-card">
+                <span>Active Tournaments</span>
+                <strong>{tournaments.filter((t) => t.status === 'published').length}</strong>
+                <small>Published fixtures</small>
+              </div>
+            </div>
+
+            {/* Quick Pending Queue */}
+            <div className="desk-section">
+              <div className="section-head">
+                <div>
+                  <h3>Pending Payment Checks</h3>
+                  <p>Verify bank reference or UPI receipt before confirming.</p>
+                </div>
+                <Link to="/admin/registrations" className="text-link">
+                  See all ({registrations.length})
+                </Link>
+              </div>
+
+              {pending.length > 0 ? (
+                <div className="queue-cards-list">
+                  {pending.slice(0, 5).map((row) => {
+                    const event = tournaments.find((t) => t.id === row.tournamentId);
+                    return (
+                      <div className="queue-card" key={row.id}>
+                        <div className="queue-card-top">
+                          <div>
+                            <strong>{row.teamName}</strong>
+                            <span>
+                              {event?.title || 'Tournament'} • Capt. {row.captainName}
+                            </span>
+                          </div>
+                          <StatusChip status={row.status} />
+                        </div>
+                        <div className="queue-card-details">
+                          <div>
+                            <span>UTR / Ref:</span>
+                            <code>{row.reference || 'None'}</code>
+                          </div>
+                          <div>
+                            <span>Contact:</span>
+                            <span>{row.phone}</span>
+                          </div>
+                        </div>
+                        <div className="queue-card-actions">
+                          <Link to="/admin/registrations" className="btn btn-sm btn-outline">
+                            Review in Queue
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="clean-empty-box">
+                  <Check size={20} className="text-green" />
+                  <p>All payment references are reviewed. No pending approvals!</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </AppShell>
+  );
+}
 
 function UserDashboard() {
   const { user, resendVerification, refreshVerification } = useAuth();
   const { tournaments, registrations, loading, error, refresh } = useData();
-  return <AppShell active="/user/dashboard"><div className="app-title-row"><div><p className="app-breadcrumb">KMT / Player desk</p><h1>My entries</h1><p>Your team’s registrations, payment checks and confirmed passes.</p></div><Link to="/tournaments" className="button button--outline">Find a tournament <ArrowUpRight size={16} /></Link></div>
-    {!user?.emailVerified && <div className="notice-banner"><ShieldCheck size={18} /><span>Verify your email to link guest registrations to this account.</span><button className="text-link" onClick={resendVerification}>Resend verification</button><button className="text-link" onClick={refreshVerification}>I verified</button></div>}
-    {loading ? <LoadingState /> : error ? <ErrorState message={error} retry={refresh} /> : registrations.length ? <div className="registration-cards">{registrations.map((row) => <UserRegistration key={row.id} row={row} tournament={tournaments.find((item) => item.id === row.tournamentId)} />)}</div> : <EmptyState title="No team entries yet" copy="Once you register with this verified email, your tournament entry will appear here." action={<Link to="/tournaments" className="button button--dark">Explore tournaments <ArrowRight size={16} /></Link>} />}
-  </AppShell>;
+
+  return (
+    <AppShell active="/user/dashboard">
+      <div className="dashboard-container">
+        <div className="page-title-row">
+          <div>
+            <span className="kicker-tag">Player Portal</span>
+            <h2>My Matchday Entries</h2>
+          </div>
+          <Link to="/tournaments" className="btn btn-outline btn-sm">
+            <Plus size={15} />
+            <span>Enter Tournament</span>
+          </Link>
+        </div>
+
+        {!user?.emailVerified && (
+          <div className="alert alert-warning email-banner">
+            <ShieldAlert size={20} />
+            <div className="email-banner-text">
+              <strong>Email Verification Needed</strong>
+              <p>Verify your email to link registrations submitted as a guest.</p>
+            </div>
+            <div className="email-banner-actions">
+              <button type="button" className="btn btn-sm btn-outline" onClick={resendVerification}>
+                Resend Link
+              </button>
+              <button type="button" className="btn btn-sm btn-gold" onClick={refreshVerification}>
+                Check Status
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState message={error} retry={refresh} />
+        ) : registrations.length > 0 ? (
+          <div className="user-passes-list">
+            {registrations.map((row) => (
+              <UserRegistrationCard
+                key={row.id}
+                row={row}
+                tournament={tournaments.find((t) => t.id === row.tournamentId)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No Tournament Entries Found"
+            copy="Once you submit a registration using your verified email, your team match pass will appear here."
+            action={
+              <Link to="/tournaments" className="btn btn-gold">
+                Browse Open Tournaments
+              </Link>
+            }
+          />
+        )}
+      </div>
+    </AppShell>
+  );
 }
 
-function UserRegistration({ row, tournament }) {
+function UserRegistrationCard({ row, tournament }) {
   const [copied, setCopied] = useState(false);
-  return <article className="user-registration"><div className="user-registration-top"><div><EventMeta tournament={tournament || { format: 'Tournament', ballType: '', startsAt: '' }} /><h2>{tournament?.title || 'Tournament entry'}</h2><p>{row.teamName} · Captain {row.captainName}</p></div><StatusChip status={row.status} /></div><div className="roster-preview"><strong>Team roster</strong><div>{(row.players || []).map((player) => <span key={player.name}>{player.name}{player.role ? ` · ${player.role}` : ''}</span>)}</div></div><div className="registration-meta"><span>Registration ID <code>{row.id}</code><button className="copy-id" aria-label="Copy registration ID" onClick={() => { navigator.clipboard?.writeText(row.id); setCopied(true); }}>{copied ? <Check size={14} /> : <Copy size={14} />}</button></span><span>Match date <strong>{tournament ? dateLabel(tournament.startsAt) : 'To be announced'}</strong></span><span>Payment <strong>{row.paymentMethod === 'upi' ? `UPI · ${row.reference || 'Reference submitted'}` : `Offline · ${row.reference || 'At stadium'}`}</strong></span></div>{row.adminNote && <p className="admin-note"><strong>Organizer note:</strong> {row.adminNote}</p>}{row.status === 'CONFIRMED' && <ConfirmationPass row={row} tournament={tournament} />}</article>;
+  const [showRoster, setShowRoster] = useState(false);
+
+  return (
+    <article className="match-pass-card">
+      <div className="pass-header">
+        <div>
+          <span className="pass-tournament-name">{tournament?.title || 'Cricket Tournament'}</span>
+          <h3 className="pass-team-name">{row.teamName}</h3>
+          <p className="pass-captain">Captain: {row.captainName}</p>
+        </div>
+        <StatusChip status={row.status} />
+      </div>
+
+      <div className="pass-specs">
+        <div>
+          <span>First Match</span>
+          <strong>{tournament ? dateLabel(tournament.startsAt) : 'TBA'}</strong>
+        </div>
+        <div>
+          <span>Venue</span>
+          <strong>{tournament?.venue || 'KMT Cricket Stadium'}</strong>
+        </div>
+        <div>
+          <span>Payment</span>
+          <strong>{row.paymentMethod === 'upi' ? 'UPI Direct' : 'Stadium Desk'}</strong>
+        </div>
+      </div>
+
+      <div className="pass-footer">
+        <div className="pass-id-row">
+          <span>Reg ID: <code>{row.id}</code></span>
+          <button
+            type="button"
+            className="btn-copy-id"
+            onClick={() => {
+              navigator.clipboard?.writeText(row.id);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            aria-label="Copy Registration ID"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="btn-toggle-roster"
+          onClick={() => setShowRoster(!showRoster)}
+        >
+          <span>{row.players?.length || 0} Players</span>
+          <ChevronDown size={15} className={showRoster ? 'rotate-180' : ''} />
+        </button>
+      </div>
+
+      {showRoster && (
+        <div className="pass-roster-drawer">
+          <h4>Team Squad Roster</h4>
+          <div className="pass-roster-chips">
+            {(row.players || []).map((p, idx) => (
+              <span key={idx} className="roster-player-chip">
+                <strong>{p.name}</strong>
+                {p.jersey && <small>#{p.jersey}</small>}
+                {p.role && <small>({p.role})</small>}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {row.adminNote && (
+        <div className="pass-admin-note">
+          <strong>Organizer Note:</strong> {row.adminNote}
+        </div>
+      )}
+
+      {row.status === 'CONFIRMED' && <ConfirmationPass row={row} tournament={tournament} />}
+    </article>
+  );
 }
 
-function ConfirmationPass({ row, tournament }) { return <div className="confirmation-pass"><div><p className="pass-caption">KMT · CONFIRMED TEAM PASS</p><h3>{row.teamName}</h3><p>{tournament?.title} · {dateLabel(tournament?.startsAt)} · {tournament?.venue}</p><span>Captain {row.captainName} · {row.players.length} players</span></div><button className="button button--outline" onClick={(event) => { const pass = event.currentTarget.closest('.confirmation-pass'); pass.classList.add('print-target'); window.print(); pass.classList.remove('print-target'); }}><Download size={16} /> Save pass as PDF</button></div>; }
+function ConfirmationPass({ row, tournament }) {
+  return (
+    <div className="printable-pass-action">
+      <button
+        type="button"
+        className="btn btn-gold btn-block"
+        onClick={(event) => {
+          const pass = event.currentTarget.closest('.match-pass-card');
+          pass.classList.add('print-target');
+          window.print();
+          pass.classList.remove('print-target');
+        }}
+      >
+        <Download size={16} />
+        <span>Save / Print Matchday Pass (PDF)</span>
+      </button>
+    </div>
+  );
+}
 
 function AdminTournaments() {
   const { tournaments, loading, error, refresh } = useData();
@@ -249,32 +1777,383 @@ function AdminTournaments() {
   const [campaignSource, setCampaignSource] = useState('whatsapp');
   const [campaignName, setCampaignName] = useState('');
   const [qr, setQr] = useState('');
-  const [copyState, setCopyState] = useState('Copy link');
+  const [copyState, setCopyState] = useState('Copy Link');
   const [formError, setFormError] = useState('');
-  useEffect(() => { if (selectedId) { const found = tournaments.find((item) => item.id === selectedId); if (found) setForm({ ...found, startsAtInput: dateTimeValue(found.startsAt), endsAtInput: dateTimeValue(found.endsAt), deadlineInput: dateTimeValue(found.deadline) }); } }, [selectedId, tournaments]);
-  function blankTournament() { return { id: '', title: '', format: 'T20', ballType: 'Leather Ball', venue: 'KMT Cricket Stadium', startsAtInput: '', endsAtInput: '', deadlineInput: '', entryFee: '', status: 'draft', description: '', termsMarkdown: '## Tournament terms\n\n- Arrive 45 minutes before play.\n- Captains are responsible for player eligibility.\n- Organizer decisions are final.', payment: { upiId: '', offlineInstructions: '', supportPhone: '', supportEmail: '' }, formFields: [] }; }
-  const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-  const changePayment = (key, value) => setForm((current) => ({ ...current, payment: { ...current.payment, [key]: value } }));
-  const save = async (event) => { event.preventDefault(); setFormError(''); if (!form.title.trim() || !form.venue.trim() || !form.startsAtInput || !form.deadlineInput || !Number.isFinite(Number(form.entryFee)) || Number(form.entryFee) < 0) { setFormError('Add a title, venue, match date, registration deadline and valid entry fee.'); return; } if (form.formFields.some((field) => !field.label.trim() || (field.type === 'select' && !field.options?.some((option) => option.trim())))) { setFormError('Every custom field needs a label, and dropdowns need at least one option.'); return; } setBusy(true); setNotice(''); try { const { startsAtInput, endsAtInput, deadlineInput, ...details } = form; const value = { ...details, title: form.title.trim(), venue: form.venue.trim(), entryFee: Number(form.entryFee), startsAt: dateIso(startsAtInput), endsAt: dateIso(endsAtInput || startsAtInput), deadline: dateIso(deadlineInput) }; if (!form.id) { const id = await addTournament(value); setSelectedId(id); } else { await saveTournament(value); } setNotice('Tournament saved.'); } catch (cause) { console.error(cause); setFormError('Could not save tournament. Check the live admin allowlist and try again.'); } finally { setBusy(false); } };
-  const selectEvent = (id) => { setSelectedId(id); setNotice(''); setQr(''); setFormError(''); };
-  const addField = () => { const id = `field-${crypto.randomUUID().slice(0, 8)}`; change('formFields', [...form.formFields, { id, label: '', type: 'text', required: false, options: [] }]); };
-  const updateField = (id, key, value) => change('formFields', form.formFields.map((field) => field.id === id ? { ...field, [key]: value } : field));
-  const removeField = (id) => change('formFields', form.formFields.filter((field) => field.id !== id));
-  const generateQr = async () => { if (!form.id) return; const url = campaignUrl(form.id, campaignSource, campaignName); try { setQr(await QRCode.toDataURL(url, { width: 240, margin: 1, color: { dark: '#17392d', light: '#ffffff' } })); } catch { setFormError('Could not generate this campaign QR code.'); } };
-  const shareUrl = form.id ? campaignUrl(form.id, campaignSource, campaignName) : '';
-  return <AppShell active="/admin/tournaments"><div className="app-title-row"><div><p className="app-breadcrumb">KMT / Organizer desk</p><h1>Tournament setup</h1><p>Dates, entry details and the questions your teams answer.</p></div><button className="button button--dark" onClick={() => { setForm(blankTournament()); setSelectedId(''); setNotice(''); setQr(''); }}><Plus size={17} /> New tournament</button></div>
-    {loading ? <LoadingState /> : error ? <ErrorState message={error} retry={refresh} /> : <div className="setup-layout"><aside className="setup-list"><div className="setup-list-heading"><h2>Configured</h2><span>{tournaments.length}</span></div>{tournaments.map((event) => <button className={selectedId === event.id ? 'setup-item is-selected' : 'setup-item'} key={event.id} onClick={() => selectEvent(event.id)}><strong>{event.title}</strong><span>{event.format} · {money(event.entryFee)}</span><StatusText status={event.status} /></button>)}</aside>
-      <div className="setup-work"><form className="settings-form" onSubmit={save}><section className="settings-row"><div><h2>Match details</h2><p>What teams see on the campaign page.</p></div><div className="settings-panel"><div className="field-grid"><label>Tournament name *<input required maxLength={80} value={form.title} onChange={(event) => change('title', event.target.value)} /></label><label>Format<select value={form.format} onChange={(event) => change('format', event.target.value)}>{FORMATS.map((value) => <option key={value}>{value}</option>)}</select></label><label>Ball type<select value={form.ballType} onChange={(event) => change('ballType', event.target.value)}>{ballTypes.map((value) => <option key={value}>{value}</option>)}</select></label><label>Venue *<input required value={form.venue} onChange={(event) => change('venue', event.target.value)} /></label><label>First match *<input type="datetime-local" required value={form.startsAtInput} onChange={(event) => change('startsAtInput', event.target.value)} /></label><label>Last match<input type="datetime-local" value={form.endsAtInput} onChange={(event) => change('endsAtInput', event.target.value)} /></label><label>Registration deadline *<input type="datetime-local" required value={form.deadlineInput} onChange={(event) => change('deadlineInput', event.target.value)} /></label><label>Entry fee (INR) *<input type="number" required min="0" step="50" value={form.entryFee} onChange={(event) => change('entryFee', event.target.value)} /></label><label>Visibility<select value={form.status} onChange={(event) => change('status', event.target.value)}><option value="draft">Draft</option><option value="published">Published</option></select></label><label className="field-span">Campaign description<textarea rows="3" maxLength={500} value={form.description} onChange={(event) => change('description', event.target.value)} /></label></div></div></section>
-        <section className="settings-row"><div><h2>Team form</h2><p>Standard fields, player roster and extra questions.</p></div><div className="settings-panel"><div className="builder-fields">{form.formFields.map((field, index) => <div className="builder-field" key={field.id}><span className="builder-index">{index + 1}</span><label>Field label<input value={field.label} onChange={(event) => updateField(field.id, 'label', event.target.value)} placeholder="e.g. Club city" /></label><label>Answer type<select value={field.type} onChange={(event) => updateField(field.id, 'type', event.target.value)}><option value="text">Text</option><option value="number">Number</option><option value="select">Dropdown</option><option value="checkbox">Checkbox</option></select></label><label className="required-toggle"><input type="checkbox" checked={field.required} onChange={(event) => updateField(field.id, 'required', event.target.checked)} /> Required</label><button type="button" className="icon-button" aria-label="Remove form field" onClick={() => removeField(field.id)}><X size={17} /></button>{field.type === 'select' && <label className="field-span">Dropdown options (one per line)<textarea rows="2" value={(field.options || []).join('\n')} onChange={(event) => updateField(field.id, 'options', event.target.value.split('\n').filter(Boolean))} /></label>}</div>)}{form.formFields.length === 0 && <p className="inline-empty">No extra questions. Team name, captain and roster are always collected.</p>}<button type="button" className="button button--outline" onClick={addField}><Plus size={16} /> Add custom field</button></div></div></section>
-        <section className="settings-row"><div><h2>Payment & support</h2><p>Manual UPI verification and stadium desk details.</p></div><div className="settings-panel"><div className="field-grid"><label>Stadium UPI ID<input value={form.payment?.upiId || ''} onChange={(event) => changePayment('upiId', event.target.value)} placeholder="stadium@upi" /></label><label>Support phone<input type="tel" value={form.payment?.supportPhone || ''} onChange={(event) => changePayment('supportPhone', event.target.value)} /></label><label>Support email<input type="email" value={form.payment?.supportEmail || ''} onChange={(event) => changePayment('supportEmail', event.target.value)} /></label><label className="field-span">Offline payment instructions<textarea rows="2" value={form.payment?.offlineInstructions || ''} onChange={(event) => changePayment('offlineInstructions', event.target.value)} /></label></div><div className="field-preview"><span>UPI QR preview</span><p>Teams scan this payment QR and enter their reference. The organizer checks it manually.</p>{form.payment?.upiId && <UPIPaymentQR tournament={form} />}</div></div></section>
-        <section className="settings-row"><div><h2>Terms & conditions</h2><p>Markdown is shown before the required acceptance checkbox.</p></div><div className="settings-panel"><label>Tournament terms (Markdown)<textarea rows="8" value={form.termsMarkdown} onChange={(event) => change('termsMarkdown', event.target.value)} /></label><div className="terms-preview"><span>Preview</span><Markdown>{form.termsMarkdown}</Markdown></div></div></section>
-        {formError && <p className="form-alert" role="alert">{formError}</p>}{notice && <p className="form-success" role="status">{notice}</p>}<div className="save-row"><button className="button button--dark" disabled={busy}>{busy ? 'Saving…' : 'Save tournament'} <Check size={16} /></button><span>Campaign URL becomes available after saving.</span></div></form>
-        {form.id && <section className="campaign-tools"><div className="campaign-tools-heading"><div><h2>Campaign link & QR</h2><p>Build a channel-specific share link for this tournament.</p></div><span className="campaign-tools-icon"><SlidersHorizontal size={18} /></span></div><div className="campaign-controls"><label>Channel<select value={campaignSource} onChange={(event) => { setCampaignSource(event.target.value); setQr(''); }}><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="poster">Printed poster</option><option value="website">Website</option></select></label><label>Campaign name<input value={campaignName} onChange={(event) => { setCampaignName(event.target.value); setQr(''); }} placeholder="e.g. summer-cup" /></label><button className="button button--outline" onClick={generateQr}>Generate QR <ArrowRight size={15} /></button></div>{shareUrl && <div className="share-row"><input readOnly value={shareUrl} aria-label="Campaign URL" /><button className="button button--dark" onClick={async () => { try { await navigator.clipboard.writeText(shareUrl); setCopyState('Copied'); setTimeout(() => setCopyState('Copy link'), 1600); } catch { setCopyState('Select and copy URL'); } }}>{copyState === 'Copied' ? <Check size={15} /> : <Copy size={15} />}{copyState}</button></div>}{qr && <div className="qr-output"><img src={qr} alt="Scannable campaign link QR code" /><p>Scan to open this campaign. The final link includes {campaignSource}{campaignName ? ` and ${campaignName}` : ''} attribution.</p><a className="text-link" href={qr} download={`${form.id}-campaign-qr.png`}>Download QR image <Download size={15} /></a></div>}</section>}
-      </div></div>}
-  </AppShell>;
-}
 
-function StatusText({ status }) { return <span className={`status-text ${status === 'published' ? 'published' : ''}`}>{status === 'published' ? 'Published' : 'Draft'}</span>; }
+  useEffect(() => {
+    if (selectedId) {
+      const found = tournaments.find((item) => item.id === selectedId);
+      if (found) {
+        setForm({
+          ...found,
+          startsAtInput: dateTimeValue(found.startsAt),
+          endsAtInput: dateTimeValue(found.endsAt),
+          deadlineInput: dateTimeValue(found.deadline),
+        });
+      }
+    }
+  }, [selectedId, tournaments]);
+
+  function blankTournament() {
+    return {
+      id: '',
+      title: '',
+      format: 'T20',
+      ballType: 'Leather Ball',
+      venue: 'KMT Cricket Stadium, Bengaluru',
+      startsAtInput: '',
+      endsAtInput: '',
+      deadlineInput: '',
+      entryFee: '',
+      status: 'draft',
+      description: '',
+      termsMarkdown:
+        '## Tournament Terms\n\n- Report 45 minutes prior to match start.\n- Proper cricket attire and safety kit required.\n- Umpire and organizer decisions are final.',
+      payment: { upiId: '', offlineInstructions: '', supportPhone: '', supportEmail: '' },
+      formFields: [],
+    };
+  }
+
+  const change = (key, value) => setForm((curr) => ({ ...curr, [key]: value }));
+  const changePayment = (key, value) =>
+    setForm((curr) => ({ ...curr, payment: { ...curr.payment, [key]: value } }));
+
+  const save = async (event) => {
+    event.preventDefault();
+    setFormError('');
+    if (
+      !form.title.trim() ||
+      !form.venue.trim() ||
+      !form.startsAtInput ||
+      !form.deadlineInput ||
+      !Number.isFinite(Number(form.entryFee)) ||
+      Number(form.entryFee) < 0
+    ) {
+      setFormError('Please enter a title, venue, match date, registration deadline, and valid entry fee.');
+      return;
+    }
+    setBusy(true);
+    setNotice('');
+    try {
+      const { startsAtInput, endsAtInput, deadlineInput, ...details } = form;
+      const value = {
+        ...details,
+        title: form.title.trim(),
+        venue: form.venue.trim(),
+        entryFee: Number(form.entryFee),
+        startsAt: dateIso(startsAtInput),
+        endsAt: dateIso(endsAtInput || startsAtInput),
+        deadline: dateIso(deadlineInput),
+      };
+      if (!form.id) {
+        const id = await addTournament(value);
+        setSelectedId(id);
+      } else {
+        await saveTournament(value);
+      }
+      setNotice('Tournament fixture saved successfully.');
+    } catch (cause) {
+      console.error(cause);
+      setFormError('Could not save tournament. Check admin permissions.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const generateQr = async () => {
+    if (!form.id) return;
+    const url = campaignUrl(form.id, campaignSource, campaignName);
+    try {
+      setQr(await QRCode.toDataURL(url, { width: 220, margin: 1, color: { dark: '#0b3829', light: '#ffffff' } }));
+    } catch {
+      setFormError('Could not generate campaign QR code.');
+    }
+  };
+
+  const shareUrl = form.id ? campaignUrl(form.id, campaignSource, campaignName) : '';
+
+  return (
+    <AppShell active="/admin/tournaments">
+      <div className="dashboard-container">
+        <div className="page-title-row">
+          <div>
+            <span className="kicker-tag">Desk Setup</span>
+            <h2>Tournaments Configuration</h2>
+          </div>
+          <button
+            type="button"
+            className="btn btn-gold btn-sm"
+            onClick={() => {
+              setForm(blankTournament());
+              setSelectedId('');
+              setNotice('');
+              setQr('');
+            }}
+          >
+            <Plus size={16} />
+            <span>Create New</span>
+          </button>
+        </div>
+
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState message={error} retry={refresh} />
+        ) : (
+          <div className="admin-two-col">
+            {/* Tournaments Select List */}
+            <aside className="admin-side-list">
+              <span className="side-list-title">All Fixtures ({tournaments.length})</span>
+              <div className="side-list-items">
+                {tournaments.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`side-item-btn ${selectedId === t.id ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setSelectedId(t.id);
+                      setNotice('');
+                      setQr('');
+                      setFormError('');
+                    }}
+                  >
+                    <strong>{t.title}</strong>
+                    <span>
+                      {t.format} • {money(t.entryFee)}
+                    </span>
+                    <span className={`status-badge-small ${t.status === 'published' ? 'is-pub' : 'is-draft'}`}>
+                      {t.status === 'published' ? 'Published' : 'Draft'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            {/* Form Editor */}
+            <div className="admin-main-form-panel">
+              <form onSubmit={save} className="admin-fixture-form">
+                <div className="form-group-card">
+                  <h3>Fixture Essentials</h3>
+                  <div className="inputs-grid">
+                    <label className="input-field">
+                      <span>Tournament Title *</span>
+                      <input
+                        required
+                        value={form.title}
+                        onChange={(e) => change('title', e.target.value)}
+                        placeholder="e.g. KMT Champions Trophy 2026"
+                      />
+                    </label>
+
+                    <label className="input-field">
+                      <span>Format</span>
+                      <select value={form.format} onChange={(e) => change('format', e.target.value)}>
+                        {FORMATS.map((f) => (
+                          <option key={f} value={f}>
+                            {f}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="input-field">
+                      <span>Ball Type</span>
+                      <select value={form.ballType} onChange={(e) => change('ballType', e.target.value)}>
+                        {ballTypes.map((b) => (
+                          <option key={b} value={b}>
+                            {b}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="input-field">
+                      <span>Venue</span>
+                      <input required value={form.venue} onChange={(e) => change('venue', e.target.value)} />
+                    </label>
+
+                    <label className="input-field">
+                      <span>First Match (Start) *</span>
+                      <input
+                        type="datetime-local"
+                        required
+                        value={form.startsAtInput}
+                        onChange={(e) => change('startsAtInput', e.target.value)}
+                      />
+                    </label>
+
+                    <label className="input-field">
+                      <span>Last Match (End)</span>
+                      <input
+                        type="datetime-local"
+                        value={form.endsAtInput}
+                        onChange={(e) => change('endsAtInput', e.target.value)}
+                      />
+                    </label>
+
+                    <label className="input-field">
+                      <span>Registration Deadline *</span>
+                      <input
+                        type="datetime-local"
+                        required
+                        value={form.deadlineInput}
+                        onChange={(e) => change('deadlineInput', e.target.value)}
+                      />
+                    </label>
+
+                    <label className="input-field">
+                      <span>Team Entry Fee (INR) *</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        required
+                        value={form.entryFee}
+                        onChange={(e) => change('entryFee', e.target.value)}
+                      />
+                    </label>
+
+                    <label className="input-field">
+                      <span>Visibility</span>
+                      <select value={form.status} onChange={(e) => change('status', e.target.value)}>
+                        <option value="draft">Draft (Hidden)</option>
+                        <option value="published">Published (Live)</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label className="input-field mt-3">
+                    <span>Short Description</span>
+                    <textarea
+                      rows="2"
+                      value={form.description}
+                      onChange={(e) => change('description', e.target.value)}
+                      placeholder="Brief overview of prizes, overs, and eligibility"
+                    />
+                  </label>
+                </div>
+
+                <div className="form-group-card">
+                  <h3>Payment Configuration</h3>
+                  <div className="inputs-grid">
+                    <label className="input-field">
+                      <span>Stadium UPI ID</span>
+                      <input
+                        value={form.payment?.upiId || ''}
+                        onChange={(e) => changePayment('upiId', e.target.value)}
+                        placeholder="stadium@upi"
+                      />
+                    </label>
+                    <label className="input-field">
+                      <span>Support Phone</span>
+                      <input
+                        type="tel"
+                        value={form.payment?.supportPhone || ''}
+                        onChange={(e) => changePayment('supportPhone', e.target.value)}
+                        placeholder="+91 98765 43210"
+                      />
+                    </label>
+                    <label className="input-field">
+                      <span>Support Email</span>
+                      <input
+                        type="email"
+                        value={form.payment?.supportEmail || ''}
+                        onChange={(e) => changePayment('supportEmail', e.target.value)}
+                        placeholder="desk@kmtcricket.com"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group-card">
+                  <h3>Rules & Playing Conditions (Markdown)</h3>
+                  <textarea
+                    rows="5"
+                    value={form.termsMarkdown}
+                    onChange={(e) => change('termsMarkdown', e.target.value)}
+                  />
+                </div>
+
+                {formError && <div className="alert alert-danger">{formError}</div>}
+                {notice && <div className="alert alert-success">{notice}</div>}
+
+                <div className="form-action-bar">
+                  <button type="submit" className="btn btn-gold" disabled={busy}>
+                    {busy ? 'Saving…' : 'Save Tournament'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Campaign Share & QR Tool */}
+              {form.id && (
+                <div className="campaign-share-card">
+                  <h3>Shareable Campaign Link & QR</h3>
+                  <div className="campaign-controls-grid">
+                    <label className="input-field">
+                      <span>Channel / Source</span>
+                      <select
+                        value={campaignSource}
+                        onChange={(e) => {
+                          setCampaignSource(e.target.value);
+                          setQr('');
+                        }}
+                      >
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="poster">Poster / Flyer</option>
+                        <option value="website">Website</option>
+                      </select>
+                    </label>
+                    <label className="input-field">
+                      <span>Campaign Name</span>
+                      <input
+                        value={campaignName}
+                        onChange={(e) => {
+                          setCampaignName(e.target.value);
+                          setQr('');
+                        }}
+                        placeholder="e.g. summer-cup"
+                      />
+                    </label>
+                    <button type="button" className="btn btn-outline" onClick={generateQr}>
+                      Generate QR
+                    </button>
+                  </div>
+
+                  {shareUrl && (
+                    <div className="share-url-row">
+                      <input readOnly value={shareUrl} />
+                      <button
+                        type="button"
+                        className="btn btn-gold btn-sm"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(shareUrl);
+                          setCopyState('Copied!');
+                          setTimeout(() => setCopyState('Copy Link'), 2000);
+                        }}
+                      >
+                        {copyState}
+                      </button>
+                    </div>
+                  )}
+
+                  {qr && (
+                    <div className="qr-preview-box">
+                      <img src={qr} alt="Campaign QR Code" />
+                      <a href={qr} download={`${form.id}-qr.png`} className="btn btn-sm btn-outline">
+                        <Download size={14} /> Download QR PNG
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
 
 function AdminRegistrations() {
   const { tournaments, registrations, loading, error, refresh } = useData();
@@ -284,15 +2163,258 @@ function AdminRegistrations() {
   const [busyId, setBusyId] = useState('');
   const [notice, setNotice] = useState('');
   const [reviewError, setReviewError] = useState('');
-  const visible = registrations.filter((row) => (filter === 'ALL' || row.status === filter) && `${row.teamName} ${row.captainName} ${row.reference}`.toLowerCase().includes(search.toLowerCase()));
-  const downloadCsv = () => { const blob = new Blob([toCsv(visible)], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'kmt-team-registrations.csv'; anchor.click(); URL.revokeObjectURL(url); };
-  const decide = async (row, status) => { const note = notes[row.id] ?? row.adminNote ?? ''; if (status === 'REJECTED' && !note.trim()) { setReviewError('Add a note explaining why a registration is rejected.'); return; } setBusyId(row.id); setNotice(''); setReviewError(''); try { await reviewRegistration(row.id, status, note.trim()); setNotice(`${row.teamName} marked ${status.toLowerCase()}.`); } catch (cause) { console.error(cause); setReviewError('Review could not be saved. Check your live admin permissions.'); } finally { setBusyId(''); } };
-  return <AppShell active="/admin/registrations"><div className="app-title-row"><div><p className="app-breadcrumb">KMT / Organizer desk</p><h1>Payment verification</h1><p>Match each team’s UTR or bank receipt to the entry fee.</p></div><button className="button button--outline" onClick={downloadCsv} disabled={!visible.length}><Download size={16} /> Export roster CSV</button></div>
-    <div className="list-toolbar"><div className="filter-tabs" role="tablist" aria-label="Registration status">{[['PENDING', 'Pending'], ['CONFIRMED', 'Confirmed'], ['REJECTED', 'Rejected'], ['ALL', 'All entries']].map(([value, label]) => <button role="tab" aria-selected={filter === value} className={filter === value ? 'is-active' : ''} key={value} onClick={() => setFilter(value)}>{label} <span>{value === 'ALL' ? registrations.length : registrations.filter((row) => row.status === value).length}</span></button>)}</div><label className="search-box"><Search size={16} /><input placeholder="Search teams, captains, UTR" value={search} onChange={(event) => setSearch(event.target.value)} /></label></div>
-    {notice && <p className="form-success" role="status">{notice}</p>}{reviewError && <p className="form-alert" role="alert">{reviewError}</p>}{loading ? <LoadingState /> : error ? <ErrorState message={error} retry={refresh} /> : visible.length ? <div className="registration-table-wrap"><table className="registration-table"><thead><tr><th>Team / captain</th><th>Tournament</th><th>Roster</th><th>Payment reference</th><th>Status</th><th>Review</th></tr></thead><tbody>{visible.map((row) => <tr key={row.id}><td><strong>{row.teamName}</strong><span>{row.captainName} · {row.email}</span><small>{row.phone}</small></td><td>{tournaments.find((event) => event.id === row.tournamentId)?.title || '—'}</td><td>{row.players?.length || 0} players<details className="roster-details"><summary>View roster</summary><ul>{(row.players || []).map((player, index) => <li key={`${player.name}-${index}`}>{player.name}{player.jersey ? ` · #${player.jersey}` : ''}{player.role ? ` · ${player.role}` : ''}</li>)}</ul></details></td><td><span>{row.paymentMethod === 'upi' ? 'UPI / bank' : 'Offline'}</span><code>{row.reference || '—'}</code></td><td><StatusChip status={row.status} /></td><td>{row.status === 'PENDING' ? <div className="review-actions"><textarea aria-label={`Review note for ${row.teamName}`} rows="2" value={notes[row.id] ?? row.adminNote ?? ''} onChange={(event) => setNotes((current) => ({ ...current, [row.id]: event.target.value }))} placeholder="Optional organizer note" /><button disabled={busyId === row.id} className="button button--confirm" onClick={() => decide(row, 'CONFIRMED')}>Confirm</button><button disabled={busyId === row.id} className="button button--reject" onClick={() => decide(row, 'REJECTED')}>Reject</button></div> : <span className="reviewed-label">{row.adminNote || 'Reviewed'}</span>}</td></tr>)}</tbody></table></div> : <EmptyState title="No registrations in this view" copy={filter === 'PENDING' ? 'New team entries will appear here when submitted.' : 'Try another status or search term.'} action={filter !== 'PENDING' && <button className="button button--outline" onClick={() => { setFilter('ALL'); setSearch(''); }}>Show all entries</button>} />}
-  </AppShell>;
+
+  const visible = registrations.filter(
+    (row) =>
+      (filter === 'ALL' || row.status === filter) &&
+      `${row.teamName} ${row.captainName} ${row.reference}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const downloadCsv = () => {
+    const blob = new Blob([toCsv(visible)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kmt-registrations-${filter.toLowerCase()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const decide = async (row, status) => {
+    const note = notes[row.id] ?? row.adminNote ?? '';
+    if (status === 'REJECTED' && !note.trim()) {
+      setReviewError('Please provide a reason or organizer note when rejecting a registration.');
+      return;
+    }
+    setBusyId(row.id);
+    setNotice('');
+    setReviewError('');
+    try {
+      await reviewRegistration(row.id, status, note.trim());
+      setNotice(`${row.teamName} has been marked ${status.toLowerCase()}.`);
+    } catch (cause) {
+      console.error(cause);
+      setReviewError('Review could not be saved. Check admin permissions.');
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  return (
+    <AppShell active="/admin/registrations">
+      <div className="dashboard-container">
+        <div className="page-title-row">
+          <div>
+            <span className="kicker-tag">Payment Verification</span>
+            <h2>Registered Teams Queue</h2>
+          </div>
+          <button type="button" className="btn btn-outline btn-sm" onClick={downloadCsv} disabled={!visible.length}>
+            <Download size={15} />
+            <span>Export CSV</span>
+          </button>
+        </div>
+
+        {/* Status Filters & Search Bar */}
+        <div className="queue-filter-bar">
+          <div className="filter-pills-row" role="tablist">
+            {[
+              ['PENDING', 'Pending'],
+              ['CONFIRMED', 'Confirmed'],
+              ['REJECTED', 'Rejected'],
+              ['ALL', 'All Entries'],
+            ].map(([val, label]) => {
+              const count =
+                val === 'ALL' ? registrations.length : registrations.filter((r) => r.status === val).length;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === val}
+                  className={`queue-pill ${filter === val ? 'is-active' : ''}`}
+                  onClick={() => setFilter(val)}
+                >
+                  <span>{label}</span>
+                  <span className="pill-count">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="search-bar">
+            <Search size={16} />
+            <input
+              placeholder="Search team, captain, or UTR reference…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button type="button" className="btn-clear" onClick={() => setSearch('')}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {notice && <div className="alert alert-success">{notice}</div>}
+        {reviewError && <div className="alert alert-danger">{reviewError}</div>}
+
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState message={error} retry={refresh} />
+        ) : visible.length > 0 ? (
+          /* Mobile-First Responsive Cards List */
+          <div className="admin-registrations-grid">
+            {visible.map((row) => {
+              const tournament = tournaments.find((t) => t.id === row.tournamentId);
+              return (
+                <article className="admin-entry-card" key={row.id}>
+                  <div className="entry-card-header">
+                    <div>
+                      <span className="entry-tournament">{tournament?.title || 'Tournament'}</span>
+                      <h3 className="entry-team">{row.teamName}</h3>
+                      <p className="entry-captain">
+                        Capt. {row.captainName} • {row.phone}
+                      </p>
+                    </div>
+                    <StatusChip status={row.status} />
+                  </div>
+
+                  <div className="entry-card-specs">
+                    <div>
+                      <span>Payment Method:</span>
+                      <strong>{row.paymentMethod === 'upi' ? 'UPI Transfer' : 'Desk Offline'}</strong>
+                    </div>
+                    <div>
+                      <span>UTR / Reference:</span>
+                      <code className="utr-code">{row.reference || '—'}</code>
+                    </div>
+                    <div>
+                      <span>Squad:</span>
+                      <strong>{row.players?.length || 0} players</strong>
+                    </div>
+                  </div>
+
+                  {/* Expandable roster details */}
+                  <details className="entry-roster-collapse">
+                    <summary>View {row.players?.length || 0} Players Roster</summary>
+                    <ul className="entry-roster-list">
+                      {(row.players || []).map((p, i) => (
+                        <li key={i}>
+                          <strong>{p.name}</strong> {p.jersey && `(#${p.jersey})`} {p.role && `• ${p.role}`}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+
+                  {/* Action Review Buttons */}
+                  {row.status === 'PENDING' ? (
+                    <div className="entry-review-box">
+                      <textarea
+                        rows="2"
+                        placeholder="Organizer note (optional for confirm, required for reject)"
+                        value={notes[row.id] ?? row.adminNote ?? ''}
+                        onChange={(e) => setNotes((curr) => ({ ...curr, [row.id]: e.target.value }))}
+                      />
+                      <div className="review-btn-row">
+                        <button
+                          type="button"
+                          className="btn btn-confirm"
+                          disabled={busyId === row.id}
+                          onClick={() => decide(row, 'CONFIRMED')}
+                        >
+                          Confirm & Issue Pass
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-reject"
+                          disabled={busyId === row.id}
+                          onClick={() => decide(row, 'REJECTED')}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="entry-resolved-note">
+                      <span>Status:</span> <strong>{row.status}</strong>
+                      {row.adminNote && <span> • Note: {row.adminNote}</span>}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            title="No registrations found"
+            copy={
+              filter === 'PENDING'
+                ? 'All team submissions have been processed!'
+                : 'No entries match your current filter and search criteria.'
+            }
+          />
+        )}
+      </div>
+    </AppShell>
+  );
 }
 
-function NotFound() { return <><PublicHeader /><main className="not-found wrap"><p className="section-kicker">KMT / 404</p><h1>That ball<br />went wide.</h1><p>The page doesn’t exist or this tournament is no longer listed.</p><Link to="/tournaments" className="button button--dark">Back to tournaments <ArrowRight size={16} /></Link></main><PublicFooter /></>; }
+function NotFound() {
+  return (
+    <div className="page-shell">
+      <PublicHeader />
+      <main className="main-content">
+        <div className="state-card">
+          <h1>404 — Ball Out Of Bounds</h1>
+          <p>The page you are looking for does not exist or has been moved.</p>
+          <Link to="/tournaments" className="btn btn-gold">
+            Back to Tournaments
+          </Link>
+        </div>
+      </main>
+      <PublicFooter />
+      <MobileBottomNav />
+    </div>
+  );
+}
 
-export default function App() { return <AppRoutes />; }
+export default function App() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (location.pathname === '/user/dashboard' || location.pathname.startsWith('/admin')) {
+    if (loading) {
+      return (
+        <div className="page-shell">
+          <LoadingState label="Verifying authorization…" />
+        </div>
+      );
+    }
+    if (!user) {
+      return <Navigate to={`/auth?returnTo=${encodeURIComponent(location.pathname)}`} replace />;
+    }
+    if (location.pathname.startsWith('/admin') && !user.isAdmin) {
+      return <Navigate to="/user/dashboard" replace />;
+    }
+    if (location.pathname === '/user/dashboard' && user.isAdmin) {
+      return <Navigate to="/admin" replace />;
+    }
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/tournaments" element={<HomePage />} />
+      <Route path="/t/:tournamentId" element={<TournamentPage />} />
+      <Route path="/status" element={<StatusPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/user/dashboard" element={<UserDashboard />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/tournaments" element={<AdminTournaments />} />
+      <Route path="/admin/registrations" element={<AdminRegistrations />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
