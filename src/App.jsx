@@ -36,12 +36,29 @@ import {
   User,
   Users,
   X,
+  Zap,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import Markdown from 'react-markdown';
 import { useAuth } from './AuthContext';
-import { addTournament, createRegistration, listRegistrations, listTournaments, onDataChange, reviewRegistration, saveTournament } from './store';
+import {
+  addTournament,
+  createRegistration,
+  listMatches,
+  listRegistrations,
+  listTournaments,
+  listUserTeams,
+  onDataChange,
+  reviewRegistration,
+  saveTournament,
+} from './store';
 import { FORMATS, campaignUrl, safeReturnPath, toCsv, validateRegistration } from './domain';
+import { aggregatePlayerCareerStats } from './scoring';
+import { UserTeamsManager, SavedTeamSelector } from './components/UserTeams';
+import { TournamentProgressView } from './components/TournamentProgress';
+import { MatchScorecardPage, LiveMatchCard } from './components/ScorecardView';
+import { AdminMatchScorer, AdminMatchesManager } from './components/AdminScorer';
+import { PlayerProfileModal } from './components/PlayerProfileModal';
 
 const money = (amount) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(amount || 0));
@@ -315,8 +332,8 @@ function MobileBottomNav() {
   const { user } = useAuth();
   const path = location.pathname;
 
-  // Hide bottom tab bar on fixture details page so action bar has full bottom clearance
-  if (path.startsWith('/t/')) return null;
+  // Hide bottom tab bar on fixture details and match/scorer pages so action bars have full bottom clearance
+  if (path.startsWith('/t/') || path.startsWith('/matches/') || path.includes('/scorer')) return null;
 
   const isTournaments = path === '/' || path.startsWith('/tournaments');
   const isPasses = path === '/status' || path === '/user/dashboard';
@@ -389,6 +406,8 @@ function PublicFooter() {
 function useData() {
   const [tournaments, setTournaments] = useState([]);
   const [registrations, setRegistrations] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user } = useAuth();
@@ -397,12 +416,16 @@ function useData() {
   const refresh = async () => {
     setLoading(true);
     try {
-      const [events, entries] = await Promise.all([
+      const [events, entries, matchRows, teamRows] = await Promise.all([
         listTournaments(admin),
         user ? listRegistrations(user) : Promise.resolve([]),
+        listMatches(),
+        user ? listUserTeams(user) : Promise.resolve([]),
       ]);
       setTournaments(events);
       setRegistrations(entries);
+      setMatches(matchRows || []);
+      setTeams(teamRows || []);
       setError('');
     } catch (cause) {
       console.error(cause);
@@ -417,7 +440,7 @@ function useData() {
   }, [user?.uid, admin]);
 
   useEffect(() => onDataChange(refresh), [user?.uid, admin]);
-  return { tournaments, registrations, loading, error, refresh };
+  return { tournaments, registrations, matches, teams, loading, error, refresh };
 }
 
 function LoadingState({ label = 'Loading matchday fixtures…' }) {
@@ -523,7 +546,7 @@ function TournamentCard({ tournament, index = 0 }) {
 }
 
 function HomePage() {
-  const { tournaments, loading, error, refresh } = useData();
+  const { tournaments, loading, error, refresh, matches } = useData();
   const [format, setFormat] = useState('All');
   const [ball, setBall] = useState('All');
   const [search, setSearch] = useState('');
@@ -587,6 +610,27 @@ function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Live Match Center: Live & Upcoming Matches */}
+        {matches && matches.length > 0 && (
+          <section className="live-matches-strip-section">
+            <div className="fixtures-header mb-2">
+              <div className="flex-row items-center gap-2">
+                <span className="badge badge-ball">
+                  <span className="live-dot mr-1" />
+                  MATCH CENTER
+                </span>
+                <h2 className="section-title m-0">Live & Scheduled Matches</h2>
+              </div>
+              <span className="results-count">{matches.length} Matches</span>
+            </div>
+            <div className="live-matches-horizontal-list">
+              {matches.slice(0, 4).map((m) => (
+                <LiveMatchCard key={m.id} match={m} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Fixtures & Filters Section */}
         <section id="fixtures" className="fixtures-section">
@@ -737,9 +781,17 @@ function HomePage() {
 
 function TournamentPage() {
   const { tournamentId } = useParams();
-  const { tournaments, loading, error, refresh } = useData();
+  const { tournaments, loading, error, refresh, matches, registrations } = useData();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState('register'); // 'register' | 'rules' | 'venue'
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'register'); // 'register' | 'brackets' | 'rules'
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['register', 'brackets', 'rules'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const tournament = tournaments.find((item) => item.id === tournamentId);
 
@@ -791,6 +843,16 @@ function TournamentPage() {
   }
 
   const isClosed = tournament.deadline && new Date(tournament.deadline).getTime() < Date.now();
+  const tournamentMatches = (matches || []).filter((m) => m.tournamentId === tournament.id);
+  const tournamentRegistrations = (registrations || []).filter((r) => r.tournamentId === tournament.id);
+  const userRegistrations = user
+    ? (registrations || []).filter(
+        (r) =>
+          r.ownerUid === user.uid ||
+          r.userId === user.uid ||
+          (user.email && r.email && r.email.toLowerCase() === user.email.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="page-shell">
@@ -870,6 +932,14 @@ function TournamentPage() {
             </button>
             <button
               type="button"
+              className={`tab-btn ${activeTab === 'brackets' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('brackets')}
+            >
+              <Trophy size={16} />
+              <span>Brackets & Progress</span>
+            </button>
+            <button
+              type="button"
               className={`tab-btn ${activeTab === 'rules' ? 'is-active' : ''}`}
               onClick={() => setActiveTab('rules')}
             >
@@ -888,6 +958,16 @@ function TournamentPage() {
                 source: searchParams.get('utm_source') || '',
                 campaign: searchParams.get('utm_campaign') || '',
               }}
+            />
+          </section>
+        ) : activeTab === 'brackets' ? (
+          <section className="brackets-tab-container">
+            <TournamentProgressView
+              tournament={tournament}
+              matches={tournamentMatches}
+              registrations={tournamentRegistrations}
+              currentUser={user}
+              userRegistrations={userRegistrations}
             />
           </section>
         ) : (
@@ -940,10 +1020,12 @@ function TournamentPage() {
 }
 
 function RegistrationForm({ tournament, attribution }) {
+  const { user } = useAuth();
+  const { teams } = useData();
   const [values, setValues] = useState({
     teamName: '',
     captainName: '',
-    email: '',
+    email: user?.email || '',
     phone: '',
     players: [{ name: '', jersey: '', role: 'Batter' }],
     customAnswers: {},
@@ -964,6 +1046,26 @@ function RegistrationForm({ tournament, attribution }) {
       players: current.players.map((player, i) => (i === index ? { ...player, [key]: value } : player)),
     }));
 
+  const handleSelectSavedTeam = (selectedTeam, selectedSquad) => {
+    setValues((curr) => ({
+      ...curr,
+      teamName: selectedTeam.teamName,
+      captainName: selectedTeam.captainName || selectedTeam.players?.[0]?.name || curr.captainName,
+      phone: selectedTeam.phone || curr.phone,
+      players:
+        selectedSquad && selectedSquad.length > 0
+          ? selectedSquad.map((p) => ({
+              id: p.id,
+              name: p.name,
+              jersey: p.jersey || '',
+              role: p.role || 'Batter',
+              battingStyle: p.battingStyle || '',
+              bowlingStyle: p.bowlingStyle || '',
+            }))
+          : curr.players,
+    }));
+  };
+
   const submit = async (event) => {
     event.preventDefault();
     const next = validateRegistration(tournament, values);
@@ -975,7 +1077,8 @@ function RegistrationForm({ tournament, attribution }) {
         ...values,
         tournamentId: tournament.id,
         email: values.email.trim().toLowerCase(),
-        ownerUid: null,
+        ownerUid: user ? user.uid : null,
+        userId: user ? user.uid : null,
         status: 'PENDING',
         adminNote: '',
         attribution,
@@ -1056,6 +1159,13 @@ function RegistrationForm({ tournament, attribution }) {
     <form className="modern-form" onSubmit={submit} noValidate>
       {errors.deadline && <div className="alert alert-danger">{errors.deadline}</div>}
       {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
+
+      {/* 1-Tap Saved Squad Auto-Fill for Captains */}
+      <SavedTeamSelector
+        teams={teams || []}
+        currentUser={user}
+        onSelectTeam={handleSelectSavedTeam}
+      />
 
       {/* Step 1: Team & Captain */}
       <fieldset className="form-step-card">
@@ -1703,8 +1813,9 @@ function AppShell({ children, active }) {
         ['Overview', '/admin', Trophy],
         ['Tournaments', '/admin/tournaments', Layers],
         ['Payment Queue', '/admin/registrations', TicketCheck],
+        ['Matches & Live Scoring', '/admin/matches', Zap],
       ]
-    : [['My Entries', '/user/dashboard', Ticket]];
+    : [['My Passes & Teams', '/user/dashboard', Ticket]];
 
   return (
     <div className="admin-shell">
@@ -1862,20 +1973,44 @@ function AdminDashboard() {
 
 function UserDashboard() {
   const { user, resendVerification, refreshVerification } = useAuth();
-  const { tournaments, registrations, loading, error, refresh } = useData();
+  const { tournaments, registrations, teams, matches, loading, error, refresh } = useData();
+  const [activeTab, setActiveTab] = useState('passes'); // 'passes' | 'teams'
+  const [selectedPlayerForStats, setSelectedPlayerForStats] = useState(null);
 
   return (
     <AppShell active="/user/dashboard">
       <div className="dashboard-container">
         <div className="page-title-row">
           <div>
-            <span className="kicker-tag">Player Portal</span>
-            <h2>My Matchday Entries</h2>
+            <span className="kicker-tag">Player & Captain Portal</span>
+            <h2>{activeTab === 'passes' ? 'My Matchday Passes' : 'My Teams & Squad Rosters'}</h2>
           </div>
-          <Link to="/tournaments" className="btn btn-outline btn-sm">
-            <Plus size={15} />
-            <span>Enter Tournament</span>
-          </Link>
+          <div className="dashboard-top-actions">
+            <Link to="/tournaments" className="btn btn-gold btn-sm">
+              <Plus size={15} />
+              <span>Enter Tournament</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Top Segmented Tab Switcher */}
+        <div className="tab-bar mt-2 mb-3">
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'passes' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('passes')}
+          >
+            <Ticket size={16} />
+            <span>Match Passes ({registrations.length})</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'teams' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('teams')}
+          >
+            <Users size={16} />
+            <span>Teams & Squads ({(teams || []).length})</span>
+          </button>
         </div>
 
         {!user?.emailVerified && (
@@ -1900,6 +2035,12 @@ function UserDashboard() {
           <LoadingState />
         ) : error ? (
           <ErrorState message={error} retry={refresh} />
+        ) : activeTab === 'teams' ? (
+          <UserTeamsManager
+            currentUser={user}
+            onRefreshTeams={refresh}
+            onSelectPlayerStats={(player) => setSelectedPlayerForStats(player)}
+          />
         ) : registrations.length > 0 ? (
           <div className="user-passes-list">
             {registrations.map((row) => (
@@ -1921,6 +2062,13 @@ function UserDashboard() {
             }
           />
         )}
+
+        {/* Player Career Stats Modal */}
+        <PlayerProfileModal
+          player={selectedPlayerForStats}
+          matches={matches || []}
+          onClose={() => setSelectedPlayerForStats(null)}
+        />
       </div>
     </AppShell>
   );
@@ -1955,6 +2103,14 @@ function UserRegistrationCard({ row, tournament }) {
           <span>Payment</span>
           <strong>{row.paymentMethod === 'upi' ? 'UPI Direct' : 'Stadium Desk'}</strong>
         </div>
+      </div>
+
+      {/* 1-Tap Tournament Bracket & Progress Link */}
+      <div className="pass-brackets-link-wrap">
+        <Link to={`/t/${row.tournamentId}?tab=brackets`} className="btn btn-outline btn-block btn-sm">
+          <Trophy size={14} className="text-gold" />
+          <span>Track Tournament Progress & Elimination</span>
+        </Link>
       </div>
 
       {/* Match Ground Google Maps & Directions */}
@@ -2835,6 +2991,22 @@ function AdminRegistrations() {
   );
 }
 
+function AdminMatchesManagerPage() {
+  const { user } = useAuth();
+  const { tournaments, matches, registrations, refresh } = useData(true);
+  return (
+    <AppShell active="/admin/matches">
+      <AdminMatchesManager
+        tournaments={tournaments}
+        matches={matches}
+        registrations={registrations}
+        currentUser={user}
+        onRefreshMatches={refresh}
+      />
+    </AppShell>
+  );
+}
+
 function NotFound() {
   return (
     <div className="page-shell">
@@ -2882,12 +3054,15 @@ export default function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/tournaments" element={<HomePage />} />
       <Route path="/t/:tournamentId" element={<TournamentPage />} />
+      <Route path="/matches/:matchId" element={<MatchScorecardPage />} />
       <Route path="/status" element={<StatusPage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/user/dashboard" element={<UserDashboard />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/tournaments" element={<AdminTournaments />} />
       <Route path="/admin/registrations" element={<AdminRegistrations />} />
+      <Route path="/admin/matches" element={<AdminMatchesManagerPage />} />
+      <Route path="/admin/matches/:matchId/scorer" element={<AdminMatchScorer />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
