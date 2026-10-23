@@ -1201,57 +1201,146 @@ function RegistrationForm({ tournament, attribution }) {
 function UPIPaymentQR({ tournament }) {
   const [image, setImage] = useState('');
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [copiedAmt, setCopiedAmt] = useState(false);
   const upiId = tournament.payment?.upiId;
 
-  useEffect(() => {
-    if (!upiId) {
-      setImage('');
-      return;
-    }
+  const upiParams = useMemo(() => {
+    if (!upiId) return '';
     const params = new URLSearchParams({
-      pa: upiId,
+      pa: upiId.trim(),
       pn: 'KMT Cricket Stadium',
       am: String(Number(tournament.entryFee || 0).toFixed(2)),
       cu: 'INR',
-      tn: tournament.title,
+      tn: tournament.title || 'Tournament Entry Fee',
     });
-    QRCode.toDataURL(`upi://pay?${params}`, {
-      width: 190,
+    return params.toString();
+  }, [upiId, tournament.entryFee, tournament.title]);
+
+  const upiUri = upiParams ? `upi://pay?${upiParams}` : '';
+
+  useEffect(() => {
+    if (!upiUri) {
+      setImage('');
+      return;
+    }
+    QRCode.toDataURL(upiUri, {
+      width: 200,
       margin: 1,
       color: { dark: '#0b3829', light: '#ffffff' },
     })
       .then(setImage)
       .catch(() => setImage(''));
-  }, [tournament.id, upiId, tournament.entryFee, tournament.title]);
+  }, [upiUri]);
+
+  if (!upiId) return null;
 
   return (
-    <div className="upi-qr-widget">
-      {image && (
-        <div className="qr-box">
-          <img src={image} alt={`UPI payment QR for ${tournament.title}`} />
+    <div className="upi-payment-block">
+      {/* 1. Mobile Direct UPI App Pay Button */}
+      <div className="upi-pay-direct-card">
+        <div className="upi-direct-top">
+          <span className="direct-kicker">Instant Mobile Payment</span>
+          <h4>Pay directly via your UPI App</h4>
+          <p>Tap below to launch Google Pay, PhonePe, Paytm, CRED or BHIM with pre-filled amount and recipient.</p>
         </div>
-      )}
-      <div className="upi-info">
-        <div className="upi-row">
-          <span>Official Stadium UPI ID:</span>
-          <strong>{upiId}</strong>
+
+        <a href={upiUri} className="btn btn-gold btn-block btn-lg upi-main-launch-btn">
+          <Smartphone size={20} />
+          <span>Pay {money(tournament.entryFee)} in UPI App</span>
+          <ExternalLink size={17} />
+        </a>
+
+        {/* Quick App Intent Selectors */}
+        <div className="upi-apps-row">
+          <span className="apps-label">Supported payment apps:</span>
+          <div className="upi-apps-grid">
+            <a href={upiUri} className="app-intent-btn gpay">
+              <span>Google Pay</span>
+              <ArrowUpRight size={13} />
+            </a>
+            <a href={upiUri} className="app-intent-btn phonepe">
+              <span>PhonePe</span>
+              <ArrowUpRight size={13} />
+            </a>
+            <a href={upiUri} className="app-intent-btn paytm">
+              <span>Paytm</span>
+              <ArrowUpRight size={13} />
+            </a>
+            <a href={upiUri} className="app-intent-btn bhim">
+              <span>BHIM / CRED</span>
+              <ArrowUpRight size={13} />
+            </a>
+          </div>
         </div>
-        <button
-          type="button"
-          className="btn btn-sm btn-outline"
-          onClick={() => {
-            navigator.clipboard?.writeText(upiId);
-            setCopiedUpi(true);
-            setTimeout(() => setCopiedUpi(false), 2000);
-          }}
-        >
-          {copiedUpi ? <Check size={14} /> : <Copy size={14} />}
-          <span>{copiedUpi ? 'Copied UPI ID' : 'Copy UPI ID'}</span>
-        </button>
-        <div className="upi-amount">
-          <span>Amount to Pay:</span>
-          <strong className="text-gold">{money(tournament.entryFee)}</strong>
+      </div>
+
+      <div className="upi-or-divider">
+        <span>or scan QR code from camera / another phone</span>
+      </div>
+
+      {/* 2. QR Code Widget & Copy Details */}
+      <div className="upi-qr-widget">
+        {image && (
+          <div className="qr-box-wrap">
+            <div className="qr-box">
+              <img src={image} alt={`UPI payment QR for ${tournament.title}`} />
+            </div>
+            <a
+              href={image}
+              download={`${(tournament.title || 'kmt-tournament').replace(/\s+/g, '-').toLowerCase()}-upi-qr.png`}
+              className="btn-download-qr"
+            >
+              <Download size={13} /> Save QR Image
+            </a>
+          </div>
+        )}
+        <div className="upi-info">
+          <div className="upi-row">
+            <span>Stadium Payee UPI ID:</span>
+            <div className="upi-id-copy-row">
+              <code>{upiId}</code>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline"
+                onClick={() => {
+                  navigator.clipboard?.writeText(upiId);
+                  setCopiedUpi(true);
+                  setTimeout(() => setCopiedUpi(false), 2000);
+                }}
+              >
+                {copiedUpi ? <Check size={14} /> : <Copy size={14} />}
+                <span>{copiedUpi ? 'Copied' : 'Copy ID'}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="upi-amount-row">
+            <div>
+              <span>Amount:</span>
+              <strong className="text-gold">{money(tournament.entryFee)}</strong>
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={() => {
+                navigator.clipboard?.writeText(String(Number(tournament.entryFee || 0).toFixed(0)));
+                setCopiedAmt(true);
+                setTimeout(() => setCopiedAmt(false), 2000);
+              }}
+            >
+              {copiedAmt ? <Check size={14} /> : <Copy size={14} />}
+              <span>{copiedAmt ? 'Copied' : 'Copy Amt'}</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* 3. Post-Payment Guidance */}
+      <div className="upi-post-guide">
+        <span className="guide-badge">Step 2: Submit UTR</span>
+        <p>
+          After paying, copy the <strong>12-digit UTR / Transaction ID</strong> from your UPI app receipt and paste it below so the stadium desk can confirm your team entry.
+        </p>
       </div>
     </div>
   );
@@ -2180,6 +2269,34 @@ function AdminTournaments() {
                       />
                     </label>
                   </div>
+
+                  <label className="input-field mt-3">
+                    <span>Offline Payment Instructions (for desk payments)</span>
+                    <textarea
+                      rows="2"
+                      value={form.payment?.offlineInstructions || ''}
+                      onChange={(e) => changePayment('offlineInstructions', e.target.value)}
+                      placeholder="e.g. Pay at stadium registration counter at least 1 hour before first match."
+                    />
+                  </label>
+
+                  {/* Live UPI QR & Payment Redirect Preview for Organizer */}
+                  {form.payment?.upiId ? (
+                    <div className="admin-upi-preview-card mt-3">
+                      <div className="preview-heading">
+                        <span className="live-dot" />
+                        <h4>Live UPI Payment & QR Preview</h4>
+                      </div>
+                      <p className="preview-sub">
+                        This is the live QR code and direct UPI app launcher that teams will see when registering for <strong>{form.title || 'this tournament'}</strong> ({money(form.entryFee)}):
+                      </p>
+                      <UPIPaymentQR tournament={form} />
+                    </div>
+                  ) : (
+                    <p className="field-hint mt-2">
+                      Enter a valid UPI ID (e.g. stadium@upi, 9876543210@ybl) to automatically generate the QR code and instant payment redirect buttons for this tournament.
+                    </p>
+                  )}
                 </div>
 
                 <div className="form-group-card">
