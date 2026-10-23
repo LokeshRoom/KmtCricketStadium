@@ -19,6 +19,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  Navigation,
   Phone,
   Plus,
   QrCode,
@@ -56,6 +57,134 @@ const dateTimeValue = (value) => {
 
 const dateIso = (value) => (value ? new Date(value).toISOString() : '');
 const ballTypes = ['Leather Ball', 'Tennis Ball'];
+
+export const STADIUM_MAP = {
+  name: 'KMT Cricket Ground',
+  venue: 'KMT Cricket Stadium, Vajralapuram',
+  address: 'Vajralapuram (Near Karnataka - Andhra Border)',
+  shortUrl: 'https://maps.app.goo.gl/zcPCHoWqW8Ve2ARY6',
+  directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=13.2306051,78.9124111',
+  embedUrl: 'https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s13.2306051,78.9124111!6i15!3m1!1sen!5m1!1sen',
+  lat: 13.2306051,
+  lng: 78.9124111,
+};
+
+function StadiumLocationCard({ compact = false }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'KMT Cricket Ground, Vajralapuram',
+          text: 'Location for KMT Cricket Ground, Vajralapuram',
+          url: STADIUM_MAP.shortUrl,
+        });
+        return;
+      } catch (err) {
+        // Fallback to clipboard
+      }
+    }
+    navigator.clipboard?.writeText(STADIUM_MAP.shortUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className={`stadium-map-card ${compact ? 'stadium-map-card--compact' : ''}`}>
+      <div className="stadium-map-frame-box">
+        <iframe
+          src={STADIUM_MAP.embedUrl}
+          title="KMT Cricket Ground, Vajralapuram Location on Google Maps"
+          width="100%"
+          height="100%"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          aria-label="Google Map showing KMT Cricket Ground Vajralapuram"
+        />
+        <div className="map-badge-overlay">
+          <span className="live-dot" />
+          <span>KMT Cricket Ground</span>
+        </div>
+      </div>
+
+      <div className="stadium-map-info-pane">
+        <div className="stadium-info-header">
+          <div>
+            <div className="stadium-kicker">Matchday Destination</div>
+            <h3 className="stadium-title">{STADIUM_MAP.name}</h3>
+            <p className="stadium-address">
+              <MapPin size={15} className="text-gold" />
+              <span>{STADIUM_MAP.venue}</span>
+            </p>
+          </div>
+          <span className="ground-pill">Vajralapuram</span>
+        </div>
+
+        <div className="stadium-perks-list">
+          <div className="perk-item">
+            <span className="perk-icon">🏏</span>
+            <div>
+              <strong>Main Turf Pitch</strong>
+              <small>Pro 22-yard turf with practice nets</small>
+            </div>
+          </div>
+          <div className="perk-item">
+            <span className="perk-icon">💡</span>
+            <div>
+              <strong>Night Floodlights</strong>
+              <small>High-intensity lighting for day/night matches</small>
+            </div>
+          </div>
+          <div className="perk-item">
+            <span className="perk-icon">🚗</span>
+            <div>
+              <strong>Dedicated Parking</strong>
+              <small>Spacious parking for team cars & two-wheelers</small>
+            </div>
+          </div>
+          <div className="perk-item">
+            <span className="perk-icon">🥤</span>
+            <div>
+              <strong>Pavilions & Dugouts</strong>
+              <small>Covered player dugouts & clean amenities</small>
+            </div>
+          </div>
+        </div>
+
+        <div className="stadium-actions-group">
+          <a
+            href={STADIUM_MAP.directionsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-gold btn-action"
+          >
+            <Navigation size={16} />
+            <span>Get Directions (GPS)</span>
+          </a>
+          <a
+            href={STADIUM_MAP.shortUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline btn-action"
+          >
+            <ExternalLink size={16} />
+            <span>Open in Google Maps</span>
+          </a>
+          <button
+            type="button"
+            className="btn btn-outline btn-action"
+            onClick={handleShare}
+            aria-label="Share stadium map link"
+          >
+            {copied ? <Check size={16} className="text-green" /> : <Share2 size={16} />}
+            <span>{copied ? 'Link Copied!' : 'Share Ground'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Custom Hook for PWA Installation
 function usePwaInstall() {
@@ -115,7 +244,7 @@ function BrandMark({ light = false }) {
       </span>
       <span className="brand-text">
         <span className="brand-title">KMT CRICKET</span>
-        <span className="brand-sub">STADIUM • BENGALURU</span>
+        <span className="brand-sub">STADIUM • VAJRALAPURAM</span>
       </span>
     </Link>
   );
@@ -158,6 +287,9 @@ function PublicHeader() {
           <Link to="/tournaments" className="nav-link">
             Tournaments
           </Link>
+          <a href="/#location" className="nav-link">
+            Stadium Map
+          </a>
           <Link to="/status" className="nav-link">
             My Match Pass
           </Link>
@@ -201,6 +333,10 @@ function MobileBottomNav() {
         <Ticket size={20} />
         <span>My Pass</span>
       </Link>
+      <a href="/#location" className="bottom-tab">
+        <MapPin size={20} />
+        <span>Location</span>
+      </a>
       {user?.isAdmin ? (
         <Link to="/admin" className={`bottom-tab ${isAdmin ? 'is-active' : ''}`}>
           <ShieldCheck size={20} />
@@ -228,16 +364,19 @@ function PublicFooter() {
         <div className="footer-top">
           <BrandMark light />
           <p className="footer-tagline">
-            Bengaluru’s premier floodlit cricket destination. Modern turf, leather ball tournaments & digital matchday desk.
+            Premier floodlit cricket stadium in Vajralapuram with natural turf, leather ball tournaments & digital matchday desk.
           </p>
         </div>
         <div className="footer-nav">
           <Link to="/tournaments">Tournaments</Link>
+          <a href="/#location">Stadium Map & Location</a>
+          <a href={STADIUM_MAP.shortUrl} target="_blank" rel="noopener noreferrer">Google Maps App</a>
+          <a href={STADIUM_MAP.directionsUrl} target="_blank" rel="noopener noreferrer">Get Directions</a>
           <Link to="/status">Check Entry Status</Link>
           <Link to="/auth">Organizer Desk</Link>
         </div>
         <div className="footer-bottom">
-          <small>© {new Date().getFullYear()} KMT Cricket Stadium. Bengaluru, Karnataka.</small>
+          <small>© {new Date().getFullYear()} KMT Cricket Stadium. Vajralapuram.</small>
           <div className="pwa-indicator">
             <span className="dot-green" /> PWA Enabled • Offline Ready
           </div>
@@ -363,7 +502,7 @@ function TournamentCard({ tournament, index = 0 }) {
 
         <div className="card-venue">
           <MapPin size={14} />
-          <span>{tournament.venue || 'KMT Cricket Stadium, Bengaluru'}</span>
+          <span>{tournament.venue || STADIUM_MAP.venue}</span>
         </div>
 
         {tournament.description && <p className="card-desc">{tournament.description}</p>}
@@ -410,7 +549,7 @@ function HomePage() {
           <div className="hero-container">
             <div className="hero-pill-badge">
               <span className="live-dot" />
-              <span>Bengaluru Matchday Portal</span>
+              <span>Vajralapuram Matchday Portal</span>
             </div>
             <h1 className="hero-headline">
               YOUR XI. <span className="text-gold">UNDER LIGHTS.</span>
@@ -540,6 +679,21 @@ function HomePage() {
               }
             />
           )}
+        </section>
+
+        {/* Stadium Location & Google Maps Section */}
+        <section id="location" className="stadium-location-section">
+          <div className="section-head-center">
+            <span className="badge badge-gold">
+              <MapPin size={13} />
+              <span>Official Stadium Ground</span>
+            </span>
+            <h2 className="section-title">KMT Cricket Ground, Vajralapuram</h2>
+            <p className="section-subtitle">
+              Premier floodlit cricket venue with pro 22-yard turf, practice nets, player pavilions & ample parking. Tap below for turn-by-turn Google Maps navigation.
+            </p>
+          </div>
+          <StadiumLocationCard />
         </section>
 
         {/* Clean Matchday Guide */}
@@ -679,7 +833,16 @@ function TournamentPage() {
                 <MapPin size={16} />
                 <div>
                   <span>Venue</span>
-                  <strong>{tournament.venue || 'KMT Cricket Stadium, Bengaluru'}</strong>
+                  <strong>{tournament.venue || STADIUM_MAP.venue}</strong>
+                  <a
+                    href={STADIUM_MAP.shortUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="venue-map-link"
+                  >
+                    <span>View Map & Directions</span>
+                    <ArrowUpRight size={12} />
+                  </a>
                 </div>
               </div>
               <div className="meta-item">
@@ -868,6 +1031,15 @@ function RegistrationForm({ tournament, attribution }) {
             {copiedId ? <Check size={16} /> : <Copy size={16} />}
             <span>{copiedId ? 'Copied ID' : 'Copy Registration ID'}</span>
           </button>
+          <a
+            href={STADIUM_MAP.directionsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline btn-block"
+          >
+            <Navigation size={16} />
+            <span>Get Directions to Stadium (Google Maps)</span>
+          </a>
           <Link to={`/auth?returnTo=${encodeURIComponent('/user/dashboard')}`} className="btn btn-primary btn-block">
             <span>Sign In To Track Pass</span>
             <ArrowRight size={16} />
@@ -1757,6 +1929,7 @@ function UserDashboard() {
 function UserRegistrationCard({ row, tournament }) {
   const [copied, setCopied] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   return (
     <article className="match-pass-card">
@@ -1776,12 +1949,70 @@ function UserRegistrationCard({ row, tournament }) {
         </div>
         <div>
           <span>Venue</span>
-          <strong>{tournament?.venue || 'KMT Cricket Stadium'}</strong>
+          <strong>{tournament?.venue || STADIUM_MAP.venue}</strong>
         </div>
         <div>
           <span>Payment</span>
           <strong>{row.paymentMethod === 'upi' ? 'UPI Direct' : 'Stadium Desk'}</strong>
         </div>
+      </div>
+
+      {/* Match Ground Google Maps & Directions */}
+      <div className="pass-venue-section">
+        <div className="pass-venue-header">
+          <div className="pass-venue-meta">
+            <span className="pass-venue-kicker">Match Ground</span>
+            <div className="pass-venue-name">
+              <MapPin size={15} className="text-gold" />
+              <strong>{tournament?.venue || STADIUM_MAP.venue}</strong>
+            </div>
+            <p className="pass-venue-address">{STADIUM_MAP.address}</p>
+          </div>
+          <div className="pass-venue-actions">
+            <a
+              href={STADIUM_MAP.directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-gold"
+              title="Navigate to stadium via Google Maps"
+            >
+              <Navigation size={13} />
+              <span>Directions</span>
+            </a>
+            <a
+              href={STADIUM_MAP.shortUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-outline"
+              title="Open stadium location in Google Maps app"
+            >
+              <ExternalLink size={13} />
+              <span>Maps</span>
+            </a>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost"
+              onClick={() => setShowMap(!showMap)}
+              aria-label={showMap ? 'Hide ground map' : 'View ground map'}
+            >
+              <span>{showMap ? 'Hide Map' : 'View Map'}</span>
+              <ChevronDown size={13} className={showMap ? 'rotate-180' : ''} />
+            </button>
+          </div>
+        </div>
+
+        {showMap && (
+          <div className="pass-embedded-map">
+            <iframe
+              src={STADIUM_MAP.embedUrl}
+              title={`Google Map - ${tournament?.venue || STADIUM_MAP.venue}`}
+              width="100%"
+              height="200"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        )}
       </div>
 
       <div className="pass-footer">
@@ -1840,6 +2071,15 @@ function UserRegistrationCard({ row, tournament }) {
 function ConfirmationPass({ row, tournament }) {
   return (
     <div className="printable-pass-action">
+      <div className="pass-print-venue-note">
+        <MapPin size={14} className="text-gold" />
+        <div className="pass-print-venue-text">
+          <span><strong>Ground:</strong> {tournament?.venue || STADIUM_MAP.venue} • {STADIUM_MAP.address}</span>
+          <a href={STADIUM_MAP.shortUrl} target="_blank" rel="noopener noreferrer" className="print-maps-link">
+            Google Maps: {STADIUM_MAP.shortUrl}
+          </a>
+        </div>
+      </div>
       <button
         type="button"
         className="btn btn-gold btn-block"
@@ -1889,7 +2129,7 @@ function AdminTournaments() {
       title: '',
       format: 'T20',
       ballType: 'Leather Ball',
-      venue: 'KMT Cricket Stadium, Bengaluru',
+      venue: 'KMT Cricket Stadium, Vajralapuram',
       startsAtInput: '',
       endsAtInput: '',
       deadlineInput: '',

@@ -1,7 +1,7 @@
 {
   "name": "KMT Cricket Stadium",
   "short_name": "KMT Cricket",
-  "description": "Tournaments, team registration, and live match passes at KMT Cricket Stadium, Bengaluru.",
+  "description": "Tournaments, team registration, and live match passes at KMT Cricket Stadium, Vajralapuram.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
