@@ -1,0 +1,1207 @@
+{
+ "url": "http://127.0.0.1:5175/",
+ "at": "2026-10-23T17:03:27.431Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 5,
+   "filled": [
+    0.95,
+    0.4,
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 3,
+    "css": 3,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 3902,
+     "screens": 4.3,
+     "words": 159,
+     "img": 3,
+     "video": 0,
+     "canvas": 0,
+     "svg": 8,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 3,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "cricket-contact-sheet.png",
+      "cricket-contact-sheet.png",
+      "cricket-contact-sheet.png"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "YOUR XI. UNDER LIGHTS.",
+     "words": 4,
+     "chars": 22,
+     "lines": 2,
+     "size": 155.5,
+     "vw": 10.8,
+     "font": "TikTok Sans",
+     "weight": 800,
+     "tracking": -0.075,
+     "leading": 0.79,
+     "upper": true,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.92,
+     "top": 421,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "YOUR XI. UNDER LIGHTS.",
+     "words": 4,
+     "lines": 2,
+     "size": 155.5,
+     "font": "TikTok Sans"
+    },
+    "headings": [
+     {
+      "text": "YOUR XI. UNDER LIGHTS.",
+      "words": 4,
+      "chars": 22,
+      "lines": 2,
+      "size": 155.5,
+      "vw": 10.8,
+      "font": "TikTok Sans",
+      "weight": 800,
+      "tracking": -0.075,
+      "leading": 0.79,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 421,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Pick your format.",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 70,
+      "vw": 4.9,
+      "font": "TikTok Sans",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.94,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 1064,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "T-20 Village Cricket",
+      "words": 3,
+      "chars": 20,
+      "lines": 1,
+      "size": 32,
+      "vw": 2.2,
+      "font": "TikTok Sans",
+      "weight": 400,
+      "tracking": -0.035,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.57,
+      "top": 1309,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "ONE GROUND. YOUR INNINGS.",
+      "words": 4,
+      "chars": 25,
+      "lines": 2,
+      "size": 132,
+      "vw": 9.2,
+      "font": "TikTok Sans",
+      "weight": 700,
+      "tracking": -0.075,
+      "leading": 0.8,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.78,
+      "top": 1665,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "01",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 38,
+      "vw": 2.6,
+      "font": "TikTok Sans",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "right",
+      "position": "right",
+      "widthRatio": 0.09,
+      "top": 1944,
+      "tag": "strong",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 5,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "TikTok Sans",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      16,
+      17,
+      18,
+      19,
+      24,
+      25,
+      32,
+      38,
+      70,
+      132,
+      156
+     ],
+     "sizeCount": 17,
+     "notLoaded": [],
+     "body": {
+      "font": "TikTok Sans",
+      "size": 16,
+      "leading": 1.45,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.7
+     },
+     "measureChars": 43,
+     "max": {
+      "size": 155.5,
+      "vw": 10.8,
+      "font": "TikTok Sans",
+      "text": "UNDER LIGHTS."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 10,
+     "microLabelShare": 0.214,
+     "microSamples": [
+      "KMT CRICKET STADIUM BENGALURU",
+      "TOURNAMENTS",
+      "HOME GROUND",
+      "YOUR INNINGS",
+      "Upcoming at KMT",
+      "THE ROAD TO FIRST BALL"
+     ],
+     "upperShare": 0.37,
+     "centerShare": 0,
+     "smallText": 11
+    },
+    "eyebrows": [
+     {
+      "text": "Upcoming at KMT",
+      "above": "Pick your format.",
+      "upper": true,
+      "tracked": true,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 1032
+     },
+     {
+      "text": "Others",
+      "above": "T-20 Village Cricket",
+      "upper": true,
+      "tracked": true,
+      "mono": false,
+      "pill": false,
+      "size": 12,
+      "top": 1283
+     }
+    ],
+    "numbered": [
+     {
+      "text": "01",
+      "size": 18,
+      "top": 810
+     },
+     {
+      "text": "01",
+      "size": 38,
+      "top": 1944
+     }
+    ],
+    "color": {
+     "bodyBg": "#f5f5f0",
+     "bodyBgHsl": {
+      "h": 60,
+      "s": 0.2,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#0a3829",
+       "top": 72,
+       "hsl": {
+        "h": 160,
+        "s": 0.7,
+        "l": 0.13
+       }
+      },
+      {
+       "color": "#cfd7c8",
+       "top": 1557,
+       "hsl": {
+        "h": 92,
+        "s": 0.16,
+        "l": 0.81
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.43
+      },
+      {
+       "color": "#5c625e",
+       "share": 0.14
+      },
+      {
+       "color": "#151916",
+       "share": 0.13
+      },
+      {
+       "color": "#104d38",
+       "share": 0.08
+      },
+      {
+       "color": "#f0d77b",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#151916",
+      "hsl": {
+       "h": 135,
+       "s": 0.09,
+       "l": 0.09
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 0,
+     "height": 38,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Sign in",
+      "Find your fixture"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 5,
+     "hairlineSamples": [
+      "div.matchday-tally 780px",
+      "div.filters 1328px",
+      "article.event-row 1328px",
+      "div.innings-steps 1140px",
+      "small 1328px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 3,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.92
+     },
+     {
+      "type": "img",
+      "ratio": 0.27
+     }
+    ],
+    "nav": {
+     "links": 4,
+     "fixed": false,
+     "height": 72,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "tiktok sans"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 3902,
+    "margins": {
+     "left": 56,
+     "right": 56
+    },
+    "sections": [
+     {
+      "sel": "section.matchday-hero",
+      "tag": "section",
+      "top": 72,
+      "height": 830,
+      "words": 31,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "YOUR XI.",
+       "size": 156,
+       "tag": "h1"
+      },
+      "left": 56,
+      "right": 314,
+      "textLeft": 56,
+      "textRight": 314,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#tournaments.event-list-section.wrap",
+      "tag": "section",
+      "top": 902,
+      "height": 655,
+      "words": 37,
+      "media": 1,
+      "middle": 441,
+      "heading": {
+       "text": "Pick your format.",
+       "size": 70,
+       "tag": "h2"
+      },
+      "left": 56,
+      "right": 56,
+      "textLeft": 56,
+      "textRight": 56,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.innings-story",
+      "tag": "section",
+      "top": 1557,
+      "height": 2115,
+      "words": 46,
+      "media": 1,
+      "middle": 103,
+      "heading": {
+       "text": "One ground.",
+       "size": 132,
+       "tag": "h2"
+      },
+      "left": 56,
+      "right": 56,
+      "textLeft": 56,
+      "textRight": 56,
+      "fullBleed": true,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": true
+     },
+     {
+      "sel": "footer.public-footer",
+      "tag": "footer",
+      "top": 3672,
+      "height": 230,
+      "words": 18,
+      "media": 0,
+      "middle": 355,
+      "heading": null,
+      "left": 72,
+      "right": 299,
+      "textLeft": 72,
+      "textRight": 299,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "YOUR XI. UNDER LIGHTS.",
+      "size": 156,
+      "top": 421,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 56,
+      "n": 5
+     },
+     {
+      "x": 316,
+      "n": 1
+     },
+     {
+      "x": 1044,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 16,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 5,
+   "filled": [
+    0.97,
+    0.52,
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 3,
+    "css": 3,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 3466,
+     "screens": 4.1,
+     "words": 158,
+     "img": 3,
+     "video": 0,
+     "canvas": 0,
+     "svg": 8,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 3,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "cricket-contact-sheet.png",
+      "cricket-contact-sheet.png",
+      "cricket-contact-sheet.png"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "YOUR XI. UNDER LIGHTS.",
+     "words": 4,
+     "chars": 22,
+     "lines": 3,
+     "size": 55,
+     "vw": 14.1,
+     "font": "TikTok Sans",
+     "weight": 800,
+     "tracking": -0.075,
+     "leading": 0.84,
+     "upper": true,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.9,
+     "top": 463,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "YOUR XI. UNDER LIGHTS.",
+     "words": 4,
+     "lines": 3,
+     "size": 55,
+     "font": "TikTok Sans"
+    },
+    "headings": [
+     {
+      "text": "YOUR XI. UNDER LIGHTS.",
+      "words": 4,
+      "chars": 22,
+      "lines": 3,
+      "size": 55,
+      "vw": 14.1,
+      "font": "TikTok Sans",
+      "weight": 800,
+      "tracking": -0.075,
+      "leading": 0.84,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 463,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Pick your format.",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 43,
+      "vw": 11,
+      "font": "TikTok Sans",
+      "weight": 800,
+      "tracking": -0.055,
+      "leading": 0.94,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 949,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ONE GROUND. YOUR INNINGS.",
+      "words": 4,
+      "chars": 25,
+      "lines": 2,
+      "size": 44,
+      "vw": 11.3,
+      "font": "TikTok Sans",
+      "weight": 700,
+      "tracking": -0.075,
+      "leading": 0.8,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 1550,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 3,
+     "over2Lines": 1,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "TikTok Sans",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      17,
+      18,
+      19,
+      20,
+      43,
+      44,
+      55
+     ],
+     "sizeCount": 14,
+     "notLoaded": [],
+     "body": {
+      "font": "TikTok Sans",
+      "size": 14,
+      "leading": 1.45,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.7
+     },
+     "measureChars": 49,
+     "max": {
+      "size": 55,
+      "vw": 14.1,
+      "font": "TikTok Sans",
+      "text": "UNDER LIGHTS."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 10,
+     "microLabelShare": 0.217,
+     "microSamples": [
+      "KMT CRICKET STADIUM BENGALURU",
+      "TOURNAMENTS",
+      "HOME GROUND",
+      "YOUR INNINGS",
+      "Upcoming at KMT",
+      "THE ROAD TO FIRST BALL"
+     ],
+     "upperShare": 0.38,
+     "centerShare": 0,
+     "smallText": 13
+    },
+    "eyebrows": [
+     {
+      "text": "Upcoming at KMT",
+      "above": "Pick your format.",
+      "upper": true,
+      "tracked": true,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 916
+     }
+    ],
+    "numbered": [
+     {
+      "text": "01",
+      "size": 13,
+      "top": 781
+     },
+     {
+      "text": "01",
+      "size": 20,
+      "top": 1817
+     }
+    ],
+    "color": {
+     "bodyBg": "#f5f5f0",
+     "bodyBgHsl": {
+      "h": 60,
+      "s": 0.2,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#0a3829",
+       "top": 62,
+       "hsl": {
+        "h": 160,
+        "s": 0.7,
+        "l": 0.13
+       }
+      },
+      {
+       "color": "#cfd7c8",
+       "top": 1471,
+       "hsl": {
+        "h": 92,
+        "s": 0.16,
+        "l": 0.81
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.44
+      },
+      {
+       "color": "#5c625e",
+       "share": 0.14
+      },
+      {
+       "color": "#151916",
+       "share": 0.11
+      },
+      {
+       "color": "#104d38",
+       "share": 0.08
+      },
+      {
+       "color": "#f0d77b",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#151916",
+      "hsl": {
+       "h": 135,
+       "s": 0.09,
+       "l": 0.09
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 0,
+     "height": 34,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Sign in",
+      "Find your fixture"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 4,
+     "hairlineSamples": [
+      "div.matchday-tally 350px",
+      "div.filters 350px",
+      "article.event-row 350px",
+      "small 350px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.93
+     },
+     {
+      "type": "img",
+      "ratio": 0.26
+     }
+    ],
+    "nav": {
+     "links": 3,
+     "fixed": false,
+     "height": 62,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "tiktok sans"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 3466,
+    "margins": {
+     "left": 20,
+     "right": 20
+    },
+    "sections": [
+     {
+      "sel": "section.matchday-hero",
+      "tag": "section",
+      "top": 62,
+      "height": 782,
+      "words": 31,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "YOUR XI.",
+       "size": 55,
+       "tag": "h1"
+      },
+      "left": 20,
+      "right": 20,
+      "textLeft": 20,
+      "textRight": 20,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#tournaments.event-list-section.wrap",
+      "tag": "section",
+      "top": 844,
+      "height": 627,
+      "words": 37,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Pick your format.",
+       "size": 43,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 38,
+      "textLeft": 20,
+      "textRight": 38,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.innings-story",
+      "tag": "section",
+      "top": 1471,
+      "height": 1730,
+      "words": 46,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "One ground.",
+       "size": 44,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 20,
+      "textLeft": 20,
+      "textRight": 20,
+      "fullBleed": true,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": true
+     },
+     {
+      "sel": "footer.public-footer",
+      "tag": "footer",
+      "top": 3201,
+      "height": 266,
+      "words": 18,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 20,
+      "right": 62,
+      "textLeft": 20,
+      "textRight": 62,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "YOUR XI. UNDER LIGHTS.",
+      "size": 55,
+      "top": 463,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 20,
+      "n": 6
+     },
+     {
+      "x": 124,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 14,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "eyebrow",
+   "width": 1440,
+   "message": "2 eyebrow/kicker label(s) above headings: \"Upcoming at KMT\" above \"Pick your format.\"; \"Others\" above \"T-20 Village Cricket\"",
+   "fix": "Delete them. If the label carried real information, fold it into the headline or the supporting sentence.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "numbering",
+   "width": 1440,
+   "message": "Decorative index numbers: \"01\", \"01\"",
+   "fix": "Remove them. If order truly matters, write it into the words (\"First, …\") or use a real <ol>.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "micro-label",
+   "width": 1440,
+   "message": "10 tiny uppercase letter-spaced labels (e.g. \"KMT CRICKET STADIUM BENGALURU\", \"TOURNAMENTS\", \"HOME GROUND\", \"YOUR INNINGS\").",
+   "fix": "Use sentence-case text at a readable size, or delete the label.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "hairline",
+   "width": 1440,
+   "message": "5 thin rule(s)/divider line(s): div.matchday-tally 780px | div.filters 1328px | article.event-row 1328px | div.innings-steps 1140px",
+   "fix": "Delete. Separate with space, a tone change, or scale. Lines are only for real tables and form fields.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "palette-cream",
+   "width": 1440,
+   "message": "Yellow-cream background (page background #f5f5f0).",
+   "fix": "Use the drawn palette. If you want warmth, take a low-chroma stone or bone, not a yellow cream.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "17 different font sizes (9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 24, 25, 32, 38, 70, 132, 156).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "grey-body",
+   "width": 1440,
+   "message": "The running text is a soft grey on its ground (5.7:1).",
+   "fix": "Set body copy in the full ink (7:1 or more). Keep the muted ink for secondary notes; pages read thin and unfinished when everything is grey.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "few-pictures",
+   "width": 1440,
+   "message": "Only 3 picture(s) on the page (3 photographs, footage or raster images, 0 interface fragments). Drawings in SVG do not count.",
+   "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "FAIL",
+   "id": "small-text",
+   "width": 1440,
+   "message": "11 text blocks under 13px.",
+   "fix": "Nothing meant to be read goes below 13px.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "covered-text",
+   "width": 1440,
+   "message": "Large text lies under another element at some scroll position: \"ONE GROUND. YOUR INNINGS.\" (screen 5, 100% hidden)",
+   "fix": "Nothing may sit on top of a headline or statement. Move the picture, shorten the pinned run, or raise the text above it (z-index) and give it a ground.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "pinned-over-picture",
+   "width": 1440,
+   "message": "Pinned large text slides across pictures while the page scrolls: \"ONE GROUND. YOUR INNINGS.\" (screen 5, 100% over a picture)",
+   "fix": "Jurors read a pinned title crossing drawings or photographs as a collision. Keep the pictures in the column the title does not occupy, or unpin it.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "still-page",
+   "width": 1440,
+   "message": "Only 3 element(s) moved while the page loaded and scrolled.",
+   "fix": "Build the motion layer (SKILL.md step 9, references/motion.md): the signature move, an entrance for the parts of every section, feedback on every control, and one moving picture. Transform and opacity only, with a reduced-motion fallback."
+  },
+  {
+   "level": "FAIL",
+   "id": "headline-lines",
+   "width": 390,
+   "message": "1 headline(s) wrap past two lines at 390px: \"YOUR XI. UNDER LIGHTS.\" → 3 lines (4 words, 55px)",
+   "fix": "Cut words first (a headline is a title, not a sentence). Then give it a wider measure. Lower the size only as a last resort and never below the scale you chose. A real statement paragraph belongs in a <p> or <blockquote> at 24px or less."
+  },
+  {
+   "level": "FAIL",
+   "id": "body-size",
+   "width": 390,
+   "message": "Body text is 14px (the size most of the running text is set in).",
+   "fix": "Body copy 16–20px. Map small sizes from blueprints onto your body step."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\kloke\\Documents\\ChatGPT\\KmtCricketStadium\\.taste-skill\\after\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\kloke\\Documents\\ChatGPT\\KmtCricketStadium\\.taste-skill\\after\\desktop-page-01.jpg",
+    "C:\\Users\\kloke\\Documents\\ChatGPT\\KmtCricketStadium\\.taste-skill\\after\\desktop-page-02.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\kloke\\Documents\\ChatGPT\\KmtCricketStadium\\.taste-skill\\after\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\kloke\\Documents\\ChatGPT\\KmtCricketStadium\\.taste-skill\\after\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

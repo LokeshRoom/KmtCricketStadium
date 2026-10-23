@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function verifiedEmail() { return signedIn() && request.auth.token.email_verified == true; }
+    function isAdmin() {
+      return verifiedEmail() && request.auth.token.email in ['k.lokeshmail@gmail.com'];
+    }
+    function validGuestRegistration() {
+      let data = request.resource.data;
+      let tournament = get(/databases/$(database)/documents/tournaments/$(data.tournamentId));
+      return data.keys().hasOnly([
+          'teamName', 'captainName', 'email', 'phone', 'players', 'customAnswers',
+          'paymentMethod', 'reference', 'acceptedTerms', 'tournamentId', 'ownerUid',
+          'status', 'adminNote', 'attribution', 'submittedAt', 'createdAt', 'updatedAt'
+        ])
+        && data.teamName is string && data.teamName.size() >= 2 && data.teamName.size() <= 80
+        && data.captainName is string && data.captainName.size() >= 2 && data.captainName.size() <= 80
+        && data.email is string && data.email.size() <= 254 && data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && data.phone is string && data.phone.matches('^[+0-9 ()-]{7,24}$')
+        && data.players is list && data.players.size() >= 1 && data.players.size() <= 40
+        && data.customAnswers is map && data.customAnswers.size() <= 30
+        && data.paymentMethod in ['upi', 'offline']
+        && data.reference is string && data.reference.size() <= 100
+        && (data.paymentMethod == 'offline' || data.reference.size() >= 6)
+        && data.acceptedTerms == true
+        && data.tournamentId is string && tournament.data.status == 'published'
+        && (data.ownerUid == null || (verifiedEmail() && data.ownerUid == request.auth.uid && data.email == request.auth.token.email))
+        && data.status == 'PENDING' && data.adminNote == ''
+        && data.attribution is map && data.attribution.size() <= 2
+        && data.submittedAt is string
+        && data.createdAt == request.time && data.updatedAt == request.time;
+    }
+    function canClaimRegistration() {
+      return verifiedEmail()
+        && resource.data.ownerUid == null
+        && resource.data.email == request.auth.token.email
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ownerUid']);
+    }
+    function canReviewRegistration() {
+      return isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'adminNote', 'reviewedAt'])
+        && request.resource.data.status in ['PENDING', 'CONFIRMED', 'REJECTED']
+        && request.resource.data.adminNote is string
+        && request.resource.data.adminNote.size() <= 500
+        && request.resource.data.reviewedAt == request.time;
+    }
+
+    match /tournaments/{tournamentId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /registrations/{registrationId} {
+      allow create: if validGuestRegistration();
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
+        || (verifiedEmail() && resource.data.ownerUid == null && resource.data.email == request.auth.token.email);
+      allow update: if canClaimRegistration() || canReviewRegistration();
+      allow delete: if isAdmin();
+    }
+  }
+}

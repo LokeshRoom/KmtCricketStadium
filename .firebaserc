@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "kmt-stadium-reg-20261023"
+  },
+  "targets": {
+    "kmt-stadium-reg-20261023": {
+      "hosting": {
+        "kmtstadium": [
+          "kmtstadium"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
