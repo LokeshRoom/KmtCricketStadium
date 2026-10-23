@@ -1818,6 +1818,25 @@ function AdminTournaments() {
   const changePayment = (key, value) =>
     setForm((curr) => ({ ...curr, payment: { ...curr.payment, [key]: value } }));
 
+  const addField = () => {
+    const id = `field-${crypto.randomUUID().slice(0, 8)}`;
+    change('formFields', [
+      ...(form.formFields || []),
+      { id, label: '', type: 'text', required: false, options: [] },
+    ]);
+  };
+
+  const updateField = (id, key, value) => {
+    change(
+      'formFields',
+      (form.formFields || []).map((field) => (field.id === id ? { ...field, [key]: value } : field))
+    );
+  };
+
+  const removeField = (id) => {
+    change('formFields', (form.formFields || []).filter((field) => field.id !== id));
+  };
+
   const save = async (event) => {
     event.preventDefault();
     setFormError('');
@@ -1830,6 +1849,16 @@ function AdminTournaments() {
       Number(form.entryFee) < 0
     ) {
       setFormError('Please enter a title, venue, match date, registration deadline, and valid entry fee.');
+      return;
+    }
+    if (
+      form.formFields?.some(
+        (field) =>
+          !field.label.trim() ||
+          (field.type === 'select' && !field.options?.some((option) => option.trim()))
+      )
+    ) {
+      setFormError('Every custom field needs a label, and dropdowns need at least one option.');
       return;
     }
     setBusy(true);
@@ -2031,6 +2060,94 @@ function AdminTournaments() {
                       placeholder="Brief overview of prizes, overs, and eligibility"
                     />
                   </label>
+                </div>
+
+                <div className="form-group-card">
+                  <div className="section-head">
+                    <div>
+                      <h3>Custom Registration Questions</h3>
+                      <p>Ask teams additional details during entry (e.g. Village name, Mandal, club affiliation).</p>
+                    </div>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={addField}>
+                      <Plus size={15} />
+                      <span>Add Question</span>
+                    </button>
+                  </div>
+
+                  {(!form.formFields || form.formFields.length === 0) ? (
+                    <p className="field-hint">
+                      No extra questions added. Standard fields (Team name, Captain, email, phone, and player squad) are always collected automatically.
+                    </p>
+                  ) : (
+                    <div className="builder-fields-list">
+                      {form.formFields.map((field, index) => (
+                        <div className="builder-field-card" key={field.id}>
+                          <div className="builder-field-header">
+                            <span className="builder-field-num">Question #{index + 1}</span>
+                            <button
+                              type="button"
+                              className="btn-delete-player"
+                              onClick={() => removeField(field.id)}
+                              aria-label={`Remove Question ${index + 1}`}
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+
+                          <div className="inputs-grid">
+                            <label className="input-field">
+                              <span>Field Label / Question *</span>
+                              <input
+                                value={field.label}
+                                onChange={(e) => updateField(field.id, 'label', e.target.value)}
+                                placeholder="e.g. Village Name, Home Ground, T-Shirt Size"
+                              />
+                            </label>
+
+                            <label className="input-field">
+                              <span>Answer Type</span>
+                              <select
+                                value={field.type}
+                                onChange={(e) => updateField(field.id, 'type', e.target.value)}
+                              >
+                                <option value="text">Short Text</option>
+                                <option value="number">Number</option>
+                                <option value="select">Dropdown Menu</option>
+                                <option value="checkbox">Checkbox (Yes / No)</option>
+                              </select>
+                            </label>
+                          </div>
+
+                          <label className="checkbox-wrap mt-2">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(field.required)}
+                              onChange={(e) => updateField(field.id, 'required', e.target.checked)}
+                            />
+                            <span>Required field (teams must answer to register)</span>
+                          </label>
+
+                          {field.type === 'select' && (
+                            <label className="input-field mt-2">
+                              <span>Dropdown Options (one per line)</span>
+                              <textarea
+                                rows="3"
+                                placeholder={"Option 1\nOption 2\nOption 3"}
+                                value={(field.options || []).join('\n')}
+                                onChange={(e) =>
+                                  updateField(
+                                    field.id,
+                                    'options',
+                                    e.target.value.split('\n').filter(Boolean)
+                                  )
+                                }
+                              />
+                            </label>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group-card">
