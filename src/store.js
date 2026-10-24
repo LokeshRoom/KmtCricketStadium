@@ -68,13 +68,79 @@ export async function listRegistrations(user) {
 }
 
 export async function createRegistration(registration) {
-  const ownerUid = auth.currentUser?.emailVerified ? auth.currentUser.uid : null;
-  const ref = await addDoc(collection(db, 'registrations'), {
-    ...registration,
+  const currentUser = auth.currentUser;
+  const normalizedEmail = String(registration.email || '').trim().toLowerCase();
+
+  // In Firestore rules:
+  // (data.ownerUid == null || (verifiedEmail() && data.ownerUid == request.auth.uid && data.email == request.auth.token.email))
+  // Therefore, ownerUid can ONLY be set if the currentUser is email-verified AND their email matches the form email.
+  const isMatchingVerifiedOwner = Boolean(
+    currentUser?.emailVerified &&
+    currentUser?.uid &&
+    currentUser?.email &&
+    currentUser.email.trim().toLowerCase() === normalizedEmail
+  );
+  const ownerUid = isMatchingVerifiedOwner ? currentUser.uid : null;
+
+  // Build clean attribution map with max 2 keys
+  const attribution = {};
+  if (registration.attribution && typeof registration.attribution === 'object') {
+    if (registration.attribution.source) {
+      attribution.source = String(registration.attribution.source).slice(0, 50);
+    }
+    if (registration.attribution.campaign) {
+      attribution.campaign = String(registration.attribution.campaign).slice(0, 50);
+    }
+  }
+
+  // Sanitize player roster
+  const rawPlayers = Array.isArray(registration.players) && registration.players.length > 0
+    ? registration.players
+    : [{ name: registration.captainName || 'Captain', role: 'Batter' }];
+
+  const players = rawPlayers.map((p, idx) => ({
+    id: String(p.id || `p_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`),
+    name: String(p.name || '').trim(),
+    jersey: String(p.jersey || '').trim(),
+    role: String(p.role || 'Batter'),
+    battingStyle: String(p.battingStyle || ''),
+    bowlingStyle: String(p.bowlingStyle || ''),
+  }));
+
+  const paymentMethod = registration.paymentMethod === 'offline' ? 'offline' : 'upi';
+  const reference = String(registration.reference || '').trim();
+
+  // Firestore rules strictly enforce:
+  // data.keys().hasOnly([
+  //   'teamName', 'captainName', 'email', 'phone', 'players', 'customAnswers',
+  //   'paymentMethod', 'reference', 'acceptedTerms', 'tournamentId', 'ownerUid',
+  //   'status', 'adminNote', 'attribution', 'submittedAt', 'createdAt', 'updatedAt'
+  // ])
+  const payload = {
+    teamName: String(registration.teamName || '').trim(),
+    captainName: String(registration.captainName || '').trim(),
+    email: normalizedEmail,
+    phone: String(registration.phone || '').trim(),
+    players,
+    customAnswers: (registration.customAnswers && typeof registration.customAnswers === 'object')
+      ? registration.customAnswers
+      : {},
+    paymentMethod,
+    reference,
+    acceptedTerms: true,
+    tournamentId: String(registration.tournamentId),
     ownerUid,
+    status: 'PENDING',
+    adminNote: '',
+    attribution,
+    submittedAt: typeof registration.submittedAt === 'string'
+      ? registration.submittedAt
+      : new Date().toISOString(),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  const ref = await addDoc(collection(db, 'registrations'), payload);
   emit();
   return ref.id;
 }

@@ -35,6 +35,7 @@ export function MatchScorecardPage() {
   const [activeInningsTab, setActiveInningsTab] = useState(0); // 0 = Innings 1, 1 = Innings 2
   const [selectedPlayerForStats, setSelectedPlayerForStats] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [squadTeamTab, setSquadTeamTab] = useState(0); // 0 = Team 1, 1 = Team 2
 
   useEffect(() => {
     if (!matchId) return;
@@ -128,6 +129,29 @@ export function MatchScorecardPage() {
   const lastBall = activeTimeline.length > 0 ? activeTimeline[activeTimeline.length - 1] : null;
   const currentOverBalls = currentInnings?.currentOverBalls || [];
 
+  // Filtered batting & bowling rosters for viewingInnings
+  const allBatters = viewingInnings?.battersList || [];
+  const currentStrikerId = lastBall?.strikerId;
+  const currentNonStrikerId = lastBall?.nonStrikerId;
+
+  // Batters who batted: faced balls, got out, scored runs, or currently at crease
+  const battedList = allBatters.filter((b) =>
+    b.balls > 0 || b.isOut || (b.runs > 0) || (isLive && (b.id === currentStrikerId || b.id === currentNonStrikerId))
+  );
+
+  // Batters yet to bat
+  const yetToBatList = allBatters.filter((b) =>
+    !battedList.some((bat) => bat.id === b.id)
+  );
+
+  // Active bowlers who actually bowled
+  const activeBowlers = (viewingInnings?.bowlersList || []).filter(
+    (bw) => bw.legalBalls > 0 || bw.runsConceded > 0 || bw.wickets > 0 || (isLive && bw.id === lastBall?.bowlerId)
+  );
+
+  // Group timeline by over for commentary
+  const timelineReversed = [...(currentInnings?.timeline || [])].reverse();
+
   return (
     <div className="page-shell page-scorecard">
       {/* Sticky Mobile Match Bar */}
@@ -138,7 +162,7 @@ export function MatchScorecardPage() {
             <span>Tournament</span>
           </Link>
           <div className="match-title-center">
-            <span className="match-num-pill">{match.stageName || match.stage || 'Fixture'}</span>
+            <span className="match-num-pill">{match.stageName || match.stage || 'Matchday'}</span>
             <span className="match-venue-sub">{match.venue || STADIUM_MAP.name}</span>
           </div>
           <button type="button" className="btn-icon" onClick={handleShare} aria-label="Share scorecard">
@@ -237,7 +261,7 @@ export function MatchScorecardPage() {
             </div>
           ) : null}
 
-          {/* Current Over Balls Strip (Cricbuzz / CricHeroes Style) */}
+          {/* Current Over Balls Strip */}
           {isLive && currentOverBalls.length > 0 && (
             <div className="current-over-strip-box">
               <span className="over-label">This Over:</span>
@@ -268,9 +292,11 @@ export function MatchScorecardPage() {
         </section>
 
         {/* 2. Mobile Tab Bar: Scorecard | Commentary | Match Info | Squads */}
-        <div className="scorecard-tabs-bar">
+        <div className="scorecard-tabs-bar" role="tablist">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'scorecard'}
             className={`sc-tab-btn ${activeTab === 'scorecard' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('scorecard')}
           >
@@ -278,6 +304,8 @@ export function MatchScorecardPage() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'commentary'}
             className={`sc-tab-btn ${activeTab === 'commentary' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('commentary')}
           >
@@ -285,6 +313,8 @@ export function MatchScorecardPage() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'info'}
             className={`sc-tab-btn ${activeTab === 'info' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('info')}
           >
@@ -292,6 +322,8 @@ export function MatchScorecardPage() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'squads'}
             className={`sc-tab-btn ${activeTab === 'squads' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('squads')}
           >
@@ -310,16 +342,16 @@ export function MatchScorecardPage() {
                   className={`innings-btn ${activeInningsTab === 0 ? 'is-active' : ''}`}
                   onClick={() => setActiveInningsTab(0)}
                 >
-                  <span>1st Inn: {inn1?.teamName || match.team1?.name}</span>
-                  <strong>{inn1 ? `${inn1.totalRuns}/${inn1.wickets}` : ''}</strong>
+                  <span className="inn-btn-team">1st Inn: {inn1?.teamName || match.team1?.name}</span>
+                  <strong className="inn-btn-score">{inn1 ? `${inn1.totalRuns}/${inn1.wickets}` : ''}</strong>
                 </button>
                 <button
                   type="button"
                   className={`innings-btn ${activeInningsTab === 1 ? 'is-active' : ''}`}
                   onClick={() => setActiveInningsTab(1)}
                 >
-                  <span>2nd Inn: {inn2?.teamName || match.team2?.name}</span>
-                  <strong>{inn2 ? `${inn2.totalRuns}/${inn2.wickets}` : ''}</strong>
+                  <span className="inn-btn-team">2nd Inn: {inn2?.teamName || match.team2?.name}</span>
+                  <strong className="inn-btn-score">{inn2 ? `${inn2.totalRuns}/${inn2.wickets}` : ''}</strong>
                 </button>
               </div>
             )}
@@ -327,7 +359,7 @@ export function MatchScorecardPage() {
             {viewingInnings ? (
               <div className="innings-scorecard-card">
                 <div className="innings-card-header">
-                  <div>
+                  <div className="innings-card-title-meta">
                     <h4>{viewingInnings.teamName} Innings</h4>
                     <span className="innings-summary-meta">
                       {viewingInnings.totalRuns} runs for {viewingInnings.wickets} wickets ({viewingInnings.oversFormatted || '0.0'} overs)
@@ -350,62 +382,94 @@ export function MatchScorecardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(viewingInnings.battersList || []).map((b, idx) => (
-                        <tr key={b.id || idx}>
-                          <td className="td-name">
-                            <button
-                              type="button"
-                              className="player-name-link"
-                              onClick={() => setSelectedPlayerForStats({ ...b, teamName: viewingInnings.teamName })}
-                              title="View player career stats"
-                            >
-                              <strong>{b.name}</strong>
-                            </button>
-                            <span className="dismissal-subtext">{b.dismissalText || (b.isOut ? 'out' : 'not out')}</span>
-                          </td>
-                          <td className="td-num">
-                            <strong>{b.runs}</strong>
-                          </td>
-                          <td className="td-num">{b.balls}</td>
-                          <td className="td-num">{b.fours}</td>
-                          <td className="td-num text-green">{b.sixes}</td>
-                          <td className="td-num text-muted">{b.strikeRate}</td>
-                        </tr>
-                      ))}
+                      {battedList.map((b, idx) => {
+                        const isAtCrease = isLive && (b.id === currentStrikerId || b.id === currentNonStrikerId);
+                        const isStriker = isLive && (b.id === currentStrikerId);
+                        return (
+                          <tr key={b.id || idx} className={isAtCrease ? 'batter-at-crease' : ''}>
+                            <td className="td-name">
+                              <div className="batter-name-cell">
+                                <button
+                                  type="button"
+                                  className="player-name-link"
+                                  onClick={() => setSelectedPlayerForStats({ ...b, teamName: viewingInnings.teamName })}
+                                  title="View player career stats"
+                                >
+                                  <strong>{b.name}</strong>
+                                  {isStriker && <span className="crease-star" title="On strike">*</span>}
+                                </button>
+                                <span className="dismissal-text">
+                                  {b.dismissalText ? b.dismissalText : (b.isOut ? 'out' : 'not out')}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="td-num">
+                              <strong className="stat-runs-num">{b.runs}</strong>
+                            </td>
+                            <td className="td-num">{b.balls}</td>
+                            <td className="td-num">{b.fours}</td>
+                            <td className="td-num text-green">{b.sixes}</td>
+                            <td className="td-num text-muted">{b.strikeRate}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
 
                 {/* Extras & Total Summary */}
-                <div className="innings-totals-box">
-                  <div className="total-row-line">
-                    <span>Extras</span>
-                    <strong>
-                      {viewingInnings.extras?.total || 0}{' '}
-                      <small className="extras-breakdown">
-                        (b {viewingInnings.extras?.byes || 0}, lb {viewingInnings.extras?.legByes || 0}, w{' '}
-                        {viewingInnings.extras?.wides || 0}, nb {viewingInnings.extras?.noBalls || 0})
-                      </small>
-                    </strong>
+                <div className="scorecard-summary-card">
+                  <div className="scorecard-summary-row">
+                    <span className="summary-label">Extras</span>
+                    <div className="summary-value">
+                      <strong className="extras-total-val">{viewingInnings.extras?.total || 0}</strong>
+                      <span className="extras-breakdown-sub">
+                        (b {viewingInnings.extras?.byes || 0}, lb {viewingInnings.extras?.legByes || 0}, w {viewingInnings.extras?.wides || 0}, nb {viewingInnings.extras?.noBalls || 0})
+                      </span>
+                    </div>
                   </div>
-                  <div className="total-row-line total-main">
-                    <span>Total Score</span>
-                    <strong className="total-score-badge">
-                      {viewingInnings.totalRuns} / {viewingInnings.wickets}{' '}
-                      <small>({viewingInnings.oversFormatted || '0.0'} Ov, RR: {viewingInnings.currentRunRate})</small>
-                    </strong>
+                  <div className="scorecard-summary-row total-highlight-row">
+                    <span className="summary-label">Total Score</span>
+                    <div className="summary-value">
+                      <strong className="score-total-digits">
+                        {viewingInnings.totalRuns}/{viewingInnings.wickets}
+                      </strong>
+                      <span className="overs-total-meta">
+                        ({viewingInnings.oversFormatted || '0.0'} Ov, CRR: {viewingInnings.currentRunRate})
+                      </span>
+                    </div>
                   </div>
                 </div>
 
+                {/* Yet to Bat Section */}
+                {yetToBatList.length > 0 && (
+                  <div className="yet-to-bat-box">
+                    <span className="yet-to-bat-title">Yet to bat:</span>
+                    <div className="yet-to-bat-row">
+                      {yetToBatList.map((p, idx) => (
+                        <button
+                          key={p.id || idx}
+                          type="button"
+                          className="yet-to-bat-pill"
+                          onClick={() => setSelectedPlayerForStats({ ...p, teamName: viewingInnings.teamName })}
+                        >
+                          <span>{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Fall of Wickets (FOW) */}
                 {viewingInnings.fallOfWickets?.length > 0 && (
-                  <div className="fow-section">
-                    <span className="fow-title">Fall of Wickets:</span>
-                    <div className="fow-chips-scroller">
+                  <div className="fow-box">
+                    <span className="fow-title">Fall of Wickets</span>
+                    <div className="fow-pills-scroller">
                       {viewingInnings.fallOfWickets.map((fow, idx) => (
-                        <span key={idx} className="fow-chip">
-                          <strong>{fow.score}-{fow.wickets}</strong> ({fow.batterName}, {fow.overs} ov)
-                        </span>
+                        <div key={idx} className="fow-chip-badge">
+                          <span className="fow-score-num">{fow.score}-{fow.wickets}</span>
+                          <span className="fow-meta-sub">{fow.batterName} ({fow.overs} ov)</span>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -413,6 +477,9 @@ export function MatchScorecardPage() {
 
                 {/* Bowlers Table */}
                 <div className="scorecard-table-wrap bowlers-wrap">
+                  <div className="table-header-title">
+                    <h5>Bowling Figures</h5>
+                  </div>
                   <table className="scorecard-table bowlers-table">
                     <thead>
                       <tr>
@@ -425,27 +492,33 @@ export function MatchScorecardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(viewingInnings.bowlersList || []).map((bw, idx) => (
-                        <tr key={bw.id || idx}>
-                          <td className="td-name">
-                            <button
-                              type="button"
-                              className="player-name-link"
-                              onClick={() => setSelectedPlayerForStats({ ...bw, teamName: viewingInnings.bowlingTeamName })}
-                              title="View player career stats"
-                            >
-                              <strong>{bw.name}</strong>
-                            </button>
-                          </td>
-                          <td className="td-num">{bw.overs}</td>
-                          <td className="td-num">{bw.maidens || 0}</td>
-                          <td className="td-num">{bw.runsConceded || 0}</td>
-                          <td className="td-num">
-                            <strong className="text-gold">{bw.wickets || 0}</strong>
-                          </td>
-                          <td className="td-num text-muted">{bw.economy || '0.00'}</td>
-                        </tr>
-                      ))}
+                      {(activeBowlers.length > 0 ? activeBowlers : (viewingInnings.bowlersList || []).slice(0, 2)).map((bw, idx) => {
+                        const isCurrentBowler = isLive && (bw.id === lastBall?.bowlerId);
+                        return (
+                          <tr key={bw.id || idx} className={isCurrentBowler ? 'bowler-active-row' : ''}>
+                            <td className="td-name">
+                              <div className="bowler-name-cell">
+                                <button
+                                  type="button"
+                                  className="player-name-link"
+                                  onClick={() => setSelectedPlayerForStats({ ...bw, teamName: viewingInnings.bowlingTeamName })}
+                                  title="View player career stats"
+                                >
+                                  <strong>{bw.name}</strong>
+                                  {isCurrentBowler && <span className="active-bowler-dot" title="Currently bowling" />}
+                                </button>
+                              </div>
+                            </td>
+                            <td className="td-num">{bw.overs}</td>
+                            <td className="td-num">{bw.maidens || 0}</td>
+                            <td className="td-num">{bw.runsConceded || 0}</td>
+                            <td className="td-num">
+                              <strong className="wicket-stat-bold">{bw.wickets || 0}</strong>
+                            </td>
+                            <td className="td-num text-muted">{bw.economy || '0.00'}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -469,20 +542,41 @@ export function MatchScorecardPage() {
               </div>
             ) : (
               <div className="commentary-stream">
-                {[...(currentInnings.timeline || [])].reverse().map((ball, idx) => (
-                  <div key={idx} className={`commentary-ball-item ${ball.isWicket ? 'ball-item--wicket' : ''}`}>
-                    <div className="ball-left-indicator">
-                      <span className={`ball-bubble ${ball.isWicket ? 'bubble-wicket' : ball.runs === 4 || ball.runs === 6 ? 'bubble-boundary' : ''}`}>
-                        {ball.isWicket ? 'W' : ball.extraType === 'wide' ? 'Wd' : ball.extraType === 'noBall' ? 'Nb' : ball.runs}
-                      </span>
+                {timelineReversed.map((ball, idx) => {
+                  const ballCoord = `${ball.overNumber ?? 0}.${ball.ballNumber ?? 1}`;
+                  return (
+                    <div key={idx} className={`commentary-ball-card ${ball.isWicket ? 'ball-card-wicket' : ball.runs === 4 || ball.runs === 6 ? 'ball-card-boundary' : ''}`}>
+                      <div className="ball-header-line">
+                        <div className="ball-coord-pill">{ballCoord}</div>
+                        <div className="ball-matchup-meta">
+                          <strong>{ball.bowlerName || 'Bowler'}</strong> to <strong>{ball.strikerName || 'Striker'}</strong>
+                        </div>
+                        <span
+                          className={`commentary-bubble ${
+                            ball.isWicket
+                              ? 'bubble-wicket'
+                              : ball.extraType === 'wide' || ball.extraType === 'noBall'
+                              ? 'bubble-extra'
+                              : ball.runs === 6
+                              ? 'bubble-six'
+                              : ball.runs === 4
+                              ? 'bubble-four'
+                              : ball.runs === 0
+                              ? 'bubble-dot'
+                              : 'bubble-run'
+                          }`}
+                        >
+                          {ball.isWicket ? 'W' : ball.extraType === 'wide' ? 'Wd' : ball.extraType === 'noBall' ? 'Nb' : ball.runs === 0 ? '•' : ball.runs}
+                        </span>
+                      </div>
+                      <div className="ball-commentary-body">
+                        <p className="ball-commentary-text">
+                          {ball.commentary || `${ball.strikerName || 'Striker'} scored ${ball.runs} run(s).`}
+                        </p>
+                      </div>
                     </div>
-                    <div className="ball-right-desc">
-                      <p className="ball-text">
-                        {ball.commentary || `${ball.strikerName || 'Striker'} faced ${ball.bowlerName || 'Bowler'}. ${ball.runs} run(s).`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -494,24 +588,24 @@ export function MatchScorecardPage() {
             <div className="match-info-card">
               <div className="info-row">
                 <span className="info-lbl">Tournament</span>
-                <strong>{match.tournamentTitle || 'KMT Cricket Tournament'}</strong>
+                <strong className="info-val">{match.tournamentTitle || 'KMT Cricket Tournament'}</strong>
               </div>
               <div className="info-row">
                 <span className="info-lbl">Stage & Match</span>
-                <strong>{match.stageName || match.stage || 'Knockout Fixture'}</strong>
+                <strong className="info-val">{match.stageName || match.stage || 'Knockout Fixture'}</strong>
               </div>
               <div className="info-row">
                 <span className="info-lbl">Overs Limit</span>
-                <strong>{match.oversLimit || 20} Overs per innings</strong>
+                <strong className="info-val">{match.oversLimit || 20} Overs per innings</strong>
               </div>
               <div className="info-row">
                 <span className="info-lbl">Ball Type</span>
-                <strong>{match.ballType || 'Leather Ball'}</strong>
+                <strong className="info-val">{match.ballType || 'Leather Ball'}</strong>
               </div>
               {match.toss && (
                 <div className="info-row">
                   <span className="info-lbl">Toss</span>
-                  <strong>{match.toss.winnerTeamName} won the toss and elected to {match.toss.decision}</strong>
+                  <strong className="info-val">{match.toss.winnerTeamName} won toss & elected to {match.toss.decision}</strong>
                 </div>
               )}
             </div>
@@ -568,57 +662,67 @@ export function MatchScorecardPage() {
         {/* 6. TAB 4: SQUADS / PLAYING XI */}
         {activeTab === 'squads' && (
           <div className="tab-pane-squads">
-            <div className="squads-dual-grid">
-              {/* Team 1 Squad */}
-              <div className="team-squad-box">
-                <div className="team-squad-head">
-                  <h4>{match.team1?.name}</h4>
-                  <span>Captain: {match.team1?.captainName || 'Captain'}</span>
-                </div>
-                <div className="squad-players-rows">
-                  {(match.team1?.players || []).map((p, idx) => (
-                    <button
-                      key={p.id || idx}
-                      type="button"
-                      className="squad-player-item-btn"
-                      onClick={() => setSelectedPlayerForStats({ ...p, teamName: match.team1?.name })}
-                    >
-                      <span className="p-num">{idx + 1}</span>
-                      <div className="p-meta">
-                        <strong>{p.name}</strong>
-                        {p.jersey && <small>#{p.jersey}</small>}
-                      </div>
-                      <span className="p-role-tag">{p.role || 'Player'}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Team 2 Squad */}
-              <div className="team-squad-box">
-                <div className="team-squad-head">
-                  <h4>{match.team2?.name}</h4>
-                  <span>Captain: {match.team2?.captainName || 'Captain'}</span>
-                </div>
-                <div className="squad-players-rows">
-                  {(match.team2?.players || []).map((p, idx) => (
-                    <button
-                      key={p.id || idx}
-                      type="button"
-                      className="squad-player-item-btn"
-                      onClick={() => setSelectedPlayerForStats({ ...p, teamName: match.team2?.name })}
-                    >
-                      <span className="p-num">{idx + 1}</span>
-                      <div className="p-meta">
-                        <strong>{p.name}</strong>
-                        {p.jersey && <small>#{p.jersey}</small>}
-                      </div>
-                      <span className="p-role-tag">{p.role || 'Player'}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* Team Selector Switcher on Mobile */}
+            <div className="squad-team-toggle-bar">
+              <button
+                type="button"
+                className={`squad-team-toggle-btn ${squadTeamTab === 0 ? 'is-active' : ''}`}
+                onClick={() => setSquadTeamTab(0)}
+              >
+                <span>{match.team1?.name}</span>
+                <small>({(match.team1?.players || []).length} Players)</small>
+              </button>
+              <button
+                type="button"
+                className={`squad-team-toggle-btn ${squadTeamTab === 1 ? 'is-active' : ''}`}
+                onClick={() => setSquadTeamTab(1)}
+              >
+                <span>{match.team2?.name}</span>
+                <small>({(match.team2?.players || []).length} Players)</small>
+              </button>
             </div>
+
+            {/* Display Active Team Squad */}
+            {(() => {
+              const activeSquadTeam = squadTeamTab === 0 ? match.team1 : match.team2;
+              return (
+                <div className="team-squad-box">
+                  <div className="team-squad-head">
+                    <div>
+                      <h4>{activeSquadTeam?.name}</h4>
+                      <span className="team-captain-sub">Captain: {activeSquadTeam?.captainName || activeSquadTeam?.players?.[0]?.name || 'Captain'}</span>
+                    </div>
+                  </div>
+                  <div className="squad-players-rows">
+                    {(activeSquadTeam?.players || []).map((p, idx) => {
+                      const isCaptain = p.name === activeSquadTeam?.captainName || idx === 0;
+                      return (
+                        <button
+                          key={p.id || idx}
+                          type="button"
+                          className="squad-player-item-btn"
+                          onClick={() => setSelectedPlayerForStats({ ...p, teamName: activeSquadTeam?.name })}
+                        >
+                          <div className="p-avatar-badge">
+                            {p.jersey ? <span>#{p.jersey}</span> : <span>{idx + 1}</span>}
+                          </div>
+                          <div className="p-meta">
+                            <div className="p-name-row">
+                              <strong>{p.name}</strong>
+                              {isCaptain && <span className="captain-star-badge">(C)</span>}
+                            </div>
+                            <span className="p-styles-sub">
+                              {p.battingStyle || 'Batter'}{p.bowlingStyle ? ` • ${p.bowlingStyle}` : ''}
+                            </span>
+                          </div>
+                          <span className="p-role-tag">{p.role || 'Player'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </main>

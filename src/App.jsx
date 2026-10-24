@@ -1076,13 +1076,7 @@ function RegistrationForm({ tournament, attribution }) {
       const id = await createRegistration({
         ...values,
         tournamentId: tournament.id,
-        email: values.email.trim().toLowerCase(),
-        ownerUid: user ? user.uid : null,
-        userId: user ? user.uid : null,
-        status: 'PENDING',
-        adminNote: '',
         attribution,
-        submittedAt: new Date().toISOString(),
       });
       setResult(id);
     } catch (error) {
